@@ -7,9 +7,9 @@ services:
   postgres:
     image: ${REGISTRY:-docker.io}/postgres:16
     environment:
-      POSTGRES_USER: lumina
-      POSTGRES_PASSWORD: lumina
-      POSTGRES_DB: lumina
+      POSTGRES_USER: eventide
+      POSTGRES_PASSWORD: eventide
+      POSTGRES_DB: eventide
     ports:
       - "5433:5432"
 
