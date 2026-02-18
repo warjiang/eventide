@@ -1,0 +1,55 @@
+services:
+  redis:
+    image: ${REGISTRY:-docker.io}/redis:7
+    ports:
+      - "6380:6379"
+
+  postgres:
+    image: ${REGISTRY:-docker.io}/postgres:16
+    environment:
+      POSTGRES_USER: lumina
+      POSTGRES_PASSWORD: lumina
+      POSTGRES_DB: lumina
+    ports:
+      - "5433:5432"
+
+  weed-master:
+    image: ${REGISTRY:-docker.io}/chrislusf/seaweedfs:3.69
+    command: "master -ip=weed-master -mdir=/data"
+    ports:
+      - "9333:9333"
+    volumes:
+      - weed-master-data:/data
+
+  weed-volume:
+    image: ${REGISTRY:-docker.io}/chrislusf/seaweedfs:3.69
+    command: "volume -mserver=weed-master:9333 -ip=weed-volume -dir=/data -max=5"
+    depends_on:
+      - weed-master
+    ports:
+      - "8080:8080"
+    volumes:
+      - weed-volume-data:/data
+
+  weed-filer:
+    image: ${REGISTRY:-docker.io}/chrislusf/seaweedfs:3.69
+    command: "filer -master=weed-master:9333 -ip=weed-filer"
+    depends_on:
+      - weed-master
+      - weed-volume
+    ports:
+      - "8888:8888"
+
+  weed-s3:
+    image: ${REGISTRY:-docker.io}/chrislusf/seaweedfs:3.69
+    command: "s3 -filer=weed-filer:8888 -ip.bind=0.0.0.0 -port=8333 -config=/etc/seaweedfs/s3.json"
+    depends_on:
+      - weed-filer
+    ports:
+      - "8333:8333"
+    volumes:
+      - ./seaweedfs:/etc/seaweedfs:ro
+
+volumes:
+  weed-master-data:
+  weed-volume-data:
