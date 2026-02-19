@@ -1,11 +1,11 @@
 services:
   redis:
-    image: ${REGISTRY:-docker.io}/redis:7
+    image: ${REGISTRY:-docker.io}/redis:7.0.15-alpine
     ports:
       - "6380:6379"
 
   postgres:
-    image: ${REGISTRY:-docker.io}/postgres:16
+    image: ${REGISTRY:-docker.io}/postgres:18
     environment:
       POSTGRES_USER: eventide
       POSTGRES_PASSWORD: eventide
@@ -13,43 +13,34 @@ services:
     ports:
       - "5433:5432"
 
-  weed-master:
-    image: ${REGISTRY:-docker.io}/chrislusf/seaweedfs:3.69
-    command: "master -ip=weed-master -mdir=/data"
+  seaweedfs:
+    image: ${REGISTRY:-docker.io}/chrislusf/seaweedfs:4.02
+    restart: always
     ports:
-      - "9333:9333"
-    volumes:
-      - weed-master-data:/data
-
-  weed-volume:
-    image: ${REGISTRY:-docker.io}/chrislusf/seaweedfs:3.69
-    command: "volume -mserver=weed-master:9333 -ip=weed-volume -dir=/data -max=5"
-    depends_on:
-      - weed-master
-    ports:
-      - "8080:8080"
-    volumes:
-      - weed-volume-data:/data
-
-  weed-filer:
-    image: ${REGISTRY:-docker.io}/chrislusf/seaweedfs:3.69
-    command: "filer -master=weed-master:9333 -ip=weed-filer"
-    depends_on:
-      - weed-master
-      - weed-volume
-    ports:
-      - "8888:8888"
-
-  weed-s3:
-    image: ${REGISTRY:-docker.io}/chrislusf/seaweedfs:3.69
-    command: "s3 -filer=weed-filer:8888 -ip.bind=0.0.0.0 -port=8333 -config=/etc/seaweedfs/s3.json"
-    depends_on:
-      - weed-filer
-    ports:
+      - "29333:9333"
+      - "28080:8080"
+      - "28888:8888"
       - "8333:8333"
     volumes:
+      - app-seaweedfs-data:/data
       - ./seaweedfs:/etc/seaweedfs:ro
+    command: >-
+      server -s3
+      -dir=/data
+      -volume.max=0
+      -volume.port=8080
+      -volume.publicUrl=${SEAWEEDFS_VOLUME_PUBLIC_URL:-127.0.0.1:28080}
+      -s3.config=/etc/seaweedfs/s3.json
+      -ip.bind=0.0.0.0
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://localhost:9333/cluster/status >/dev/null || wget -qO- http://localhost:9333/cluster/status >/dev/null"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    networks:
+      - default
 
 volumes:
-  weed-master-data:
-  weed-volume-data:
+  app-seaweedfs-data:
+
