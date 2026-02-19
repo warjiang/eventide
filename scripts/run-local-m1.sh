@@ -10,23 +10,19 @@ make build
 HTTP_ADDR=127.0.0.1:18081 bin/event-gateway &
 GW_PID=$!
 
-HTTP_ADDR=127.0.0.1:18083 EVENT_GATEWAY_URL=http://127.0.0.1:18081 bin/event-sidecar &
-SC_PID=$!
-
 HTTP_ADDR=127.0.0.1:18082 bin/realtime &
 RT_PID=$!
 
-REFERENCE_AGENT_ADDR=127.0.0.1:18080 EVENT_SIDECAR_URL=http://127.0.0.1:18083 bin/reference-agent &
+REFERENCE_AGENT_ADDR=127.0.0.1:18080 EVENT_GATEWAY_URL=http://127.0.0.1:18081 bin/reference-agent &
 AG_PID=$!
 
 cleanup() {
-  kill "$AG_PID" "$RT_PID" "$SC_PID" "$GW_PID" 2>/dev/null || true
+  kill "$AG_PID" "$RT_PID" "$GW_PID" 2>/dev/null || true
 }
 trap cleanup EXIT
 
 echo "running:"
 echo "- event-gateway  : http://127.0.0.1:18081"
-echo "- event-sidecar  : http://127.0.0.1:18083"
 echo "- realtime (SSE) : http://127.0.0.1:18082"
 echo "- reference-agent: http://127.0.0.1:18080"
 

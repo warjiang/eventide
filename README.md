@@ -42,18 +42,11 @@ make build
 HTTP_ADDR=127.0.0.1:18082 bin/realtime
 ```
 
-Sidecar:
-
-```bash
-make build
-HTTP_ADDR=127.0.0.1:18083 EVENT_GATEWAY_URL=http://127.0.0.1:18081 bin/event-sidecar
-```
-
 Reference agent:
 
 ```bash
 make build
-EVENT_SIDECAR_URL=http://127.0.0.1:18083 bin/reference-agent
+EVENT_GATEWAY_URL=http://127.0.0.1:18081 bin/reference-agent
 ```
 
 Create a thread + turn:

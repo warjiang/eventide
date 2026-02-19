@@ -4,7 +4,6 @@ import (
 	"errors"
 	"os"
 	"strconv"
-	"time"
 )
 
 type RedisConfig struct {
@@ -24,15 +23,8 @@ type Config struct {
 	HTTP     HTTPConfig
 	S3       S3Config
 
-	EventGatewayURL string
-
 	Streams struct {
 		TrimMaxLen int64
-	}
-
-	Sidecar struct {
-		FlushInterval time.Duration
-		MaxBatchSize  int
 	}
 }
 
@@ -68,12 +60,8 @@ func FromEnv() (Config, error) {
 	cfg.S3.UsePathStyle = getenvIntDefault("S3_USE_PATH_STYLE", 1) != 0
 
 	cfg.HTTP.Addr = getenvDefault("HTTP_ADDR", "127.0.0.1:18080")
-	cfg.EventGatewayURL = getenvDefault("EVENT_GATEWAY_URL", "http://127.0.0.1:18081")
 
 	cfg.Streams.TrimMaxLen = int64(getenvIntDefault("STREAM_TRIM_MAXLEN", 100000))
-
-	cfg.Sidecar.FlushInterval = getenvDurationDefault("SIDECAR_FLUSH_INTERVAL", 200*time.Millisecond)
-	cfg.Sidecar.MaxBatchSize = getenvIntDefault("SIDECAR_MAX_BATCH", 200)
 
 	if cfg.Redis.Addr == "" {
 		return Config{}, errors.New("REDIS_ADDR is required")
@@ -102,16 +90,4 @@ func getenvIntDefault(key string, def int) int {
 		return def
 	}
 	return n
-}
-
-func getenvDurationDefault(key string, def time.Duration) time.Duration {
-	v := os.Getenv(key)
-	if v == "" {
-		return def
-	}
-	d, err := time.ParseDuration(v)
-	if err != nil {
-		return def
-	}
-	return d
 }

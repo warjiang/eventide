@@ -25,12 +25,12 @@ type turnRequest struct {
 	Input    map[string]any `json:"input"`
 }
 
-type sidecarClient struct {
+type gatewayClient struct {
 	baseURL string
 	hc      *http.Client
 }
 
-func (s sidecarClient) Append(ctx context.Context, e eventproto.Event) error {
+func (s gatewayClient) Append(ctx context.Context, e eventproto.Event) error {
 	body, err := json.Marshal(map[string]any{"event": e})
 	if err != nil {
 		return err
@@ -66,12 +66,12 @@ func (e *httpError) Error() string {
 func main() {
 	logx.Setup()
 	addr := getenvDefault("REFERENCE_AGENT_ADDR", "127.0.0.1:18080")
-	sidecarURL := getenvDefault("EVENT_SIDECAR_URL", "http://127.0.0.1:18083")
+	gatewayURL := getenvDefault("EVENT_GATEWAY_URL", "http://127.0.0.1:18081")
 
 	ctx, cancel := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
 	defer cancel()
 
-	sidecar := sidecarClient{baseURL: sidecarURL, hc: &http.Client{Timeout: 10 * time.Second}}
+	gateway := gatewayClient{baseURL: gatewayURL, hc: &http.Client{Timeout: 10 * time.Second}}
 
 	r := chi.NewRouter()
 	r.Get("/healthz", func(w http.ResponseWriter, _ *http.Request) {
@@ -92,7 +92,7 @@ func main() {
 			return
 		}
 
-		go runTurn(context.Background(), sidecar, in.ThreadID, in.TurnID, in.Input)
+		go runTurn(context.Background(), gateway, in.ThreadID, in.TurnID, in.Input)
 
 		w.WriteHeader(http.StatusAccepted)
 		_, _ = w.Write([]byte("accepted"))
@@ -103,14 +103,14 @@ func main() {
 		<-ctx.Done()
 		_ = srv.Shutdown(context.Background())
 	}()
-	log.Printf("reference-agent listening on %s (sidecar=%s)", addr, sidecarURL)
+	log.Printf("reference-agent listening on %s (gateway=%s)", addr, gatewayURL)
 	if err := srv.ListenAndServe(); err != nil {
 		log.Fatalf("serve: %v", err)
 	}
 }
 
-func runTurn(ctx context.Context, sidecar sidecarClient, threadID, turnID string, input map[string]any) {
-	_ = sidecar.Append(ctx, eventproto.Event{
+func runTurn(ctx context.Context, gateway gatewayClient, threadID, turnID string, input map[string]any) {
+	_ = gateway.Append(ctx, eventproto.Event{
 		SpecVersion: eventproto.SpecVersion,
 		ThreadID:    threadID,
 		TurnID:      turnID,
@@ -119,7 +119,7 @@ func runTurn(ctx context.Context, sidecar sidecarClient, threadID, turnID string
 		Payload:     mustJSON(map[string]any{"input": input}),
 	})
 
-	_ = sidecar.Append(ctx, eventproto.Event{
+	_ = gateway.Append(ctx, eventproto.Event{
 		SpecVersion: eventproto.SpecVersion,
 		ThreadID:    threadID,
 		TurnID:      turnID,
@@ -131,7 +131,7 @@ func runTurn(ctx context.Context, sidecar sidecarClient, threadID, turnID string
 	msgID := "m1"
 	chunks := []string{"hello ", "from ", "reference ", "agent"}
 	for _, c := range chunks {
-		_ = sidecar.Append(ctx, eventproto.Event{
+		_ = gateway.Append(ctx, eventproto.Event{
 			SpecVersion: eventproto.SpecVersion,
 			ThreadID:    threadID,
 			TurnID:      turnID,
@@ -148,7 +148,7 @@ func runTurn(ctx context.Context, sidecar sidecarClient, threadID, turnID string
 		}
 	}
 
-	_ = sidecar.Append(ctx, eventproto.Event{
+	_ = gateway.Append(ctx, eventproto.Event{
 		SpecVersion: eventproto.SpecVersion,
 		ThreadID:    threadID,
 		TurnID:      turnID,
@@ -157,7 +157,7 @@ func runTurn(ctx context.Context, sidecar sidecarClient, threadID, turnID string
 		Payload:     mustJSON(map[string]any{"message_id": msgID}),
 	})
 
-	_ = sidecar.Append(ctx, eventproto.Event{
+	_ = gateway.Append(ctx, eventproto.Event{
 		SpecVersion: eventproto.SpecVersion,
 		ThreadID:    threadID,
 		TurnID:      turnID,

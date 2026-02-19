@@ -1,7 +1,6 @@
 .PHONY: build
 build:
 	go build -ldflags='-linkmode=external' -o bin/event-gateway ./cmd/event-gateway
-	go build -ldflags='-linkmode=external' -o bin/event-sidecar ./cmd/event-sidecar
 	go build -ldflags='-linkmode=external' -o bin/realtime ./cmd/realtime
 	go build -ldflags='-linkmode=external' -o bin/reference-agent ./cmd/reference-agent
 	go build -ldflags='-linkmode=external' -o bin/migrate ./cmd/migrate
