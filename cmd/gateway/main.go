@@ -13,6 +13,7 @@ import (
 
 	"github.com/go-chi/chi/v5"
 
+	_ "github.com/joho/godotenv/autoload"
 	"github.com/warjiang/eventide/internal/config"
 	"github.com/warjiang/eventide/internal/eventproto"
 	"github.com/warjiang/eventide/internal/httpx"
