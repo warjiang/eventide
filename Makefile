@@ -1,4 +1,4 @@
-APPS := gateway realtime reference-agent migrate persister read-api archiver
+APPS := gateway beacon reference-agent migrate persister archiver
 LDFLAGS := -linkmode=external
 
 .PHONY: build test $(APPS) docker-build
