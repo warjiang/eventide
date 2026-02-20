@@ -1,0 +1,46 @@
+services:
+  redis:
+    image: ${REGISTRY:-docker.io}/redis:7.0.15-alpine
+    ports:
+      - "6380:6379"
+
+  postgres:
+    image: ${REGISTRY:-docker.io}/postgres:18
+    environment:
+      POSTGRES_USER: eventide
+      POSTGRES_PASSWORD: eventide
+      POSTGRES_DB: eventide
+    ports:
+      - "5433:5432"
+
+  seaweedfs:
+    image: ${REGISTRY:-docker.io}/chrislusf/seaweedfs:4.02
+    restart: always
+    ports:
+      - "29333:9333"
+      - "28080:8080"
+      - "28888:8888"
+      - "8333:8333"
+    volumes:
+      - app-seaweedfs-data:/data
+      - ./seaweedfs:/etc/seaweedfs:ro
+    command: >-
+      server -s3
+      -dir=/data
+      -volume.max=0
+      -volume.port=8080
+      -volume.publicUrl=${SEAWEEDFS_VOLUME_PUBLIC_URL:-127.0.0.1:28080}
+      -s3.config=/etc/seaweedfs/s3.json
+      -ip.bind=0.0.0.0
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://localhost:9333/cluster/status >/dev/null || wget -qO- http://localhost:9333/cluster/status >/dev/null"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    networks:
+      - default
+
+volumes:
+  app-seaweedfs-data:
+

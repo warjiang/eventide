@@ -46,16 +46,8 @@
         └────────┬─────────┘                       │  event_archives(manifest)  │
                  ▲                                 └───────────┬───────────────┘
                  │                                             │
-                 │ HTTP (retry)                                │
-        ┌────────┴─────────┐                                   │
-        │ event-sidecar     │                                  │
-        │ :18083 /events:append                                │
-        │ - alloc event_id(ULID)                                │
-        │ - alloc seq (INCR seq:thread:{id})                   │
-        └────────┬─────────┘                                   │
-                 ▲                                             │
-                 │                                             │
-                 │                                             │
+		          │ HTTP
+		          │ (direct to gateway /events:append)
         ┌────────┴─────────┐                          ┌────────┴─────────┐
         │ reference-agent   │                          │ read-api          │
         │ :18080 /turns     │                          │ :18084            │
@@ -87,10 +79,9 @@
 
 ```
 Client -> reference-agent (/turns)
-         -> event-sidecar (/events:append)
+         -> event-gateway (/events:append)
             - generate event_id (ULID) if missing
             - allocate seq via Redis INCR (seq:thread:{thread_id}) if missing
-         -> event-gateway (/ingest)
             - validate event (spec_version/type/ts/payload...)
             - idempotent Lua: XADD thread stream + XADD global stream + XTRIM + dedupe TTL
          -> Redis Streams (hot)
