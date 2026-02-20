@@ -1,10 +1,8 @@
 package main
 
 import (
-	"bytes"
 	"context"
 	"encoding/json"
-	"io"
 	"log"
 	"net/http"
 	"os"
@@ -14,53 +12,15 @@ import (
 
 	"github.com/go-chi/chi/v5"
 
-	"github.com/warjiang/eventide/internal/eventproto"
 	"github.com/warjiang/eventide/internal/httpx"
 	"github.com/warjiang/eventide/internal/logx"
+	"github.com/warjiang/eventide/sdk/go/eventide"
 )
 
 type turnRequest struct {
 	ThreadID string         `json:"thread_id"`
 	TurnID   string         `json:"turn_id"`
 	Input    map[string]any `json:"input"`
-}
-
-type gatewayClient struct {
-	baseURL string
-	hc      *http.Client
-}
-
-func (s gatewayClient) Append(ctx context.Context, e eventproto.Event) error {
-	body, err := json.Marshal(map[string]any{"event": e})
-	if err != nil {
-		return err
-	}
-	req, err := http.NewRequestWithContext(ctx, http.MethodPost, s.baseURL+"/events:append", bytes.NewReader(body))
-	if err != nil {
-		return err
-	}
-	req.Header.Set("content-type", "application/json")
-	resp, err := s.hc.Do(req)
-	if err != nil {
-		return err
-	}
-	defer func() {
-		_ = resp.Body.Close()
-	}()
-	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
-		b, _ := io.ReadAll(io.LimitReader(resp.Body, 8192))
-		return &httpError{Status: resp.StatusCode, Body: string(b)}
-	}
-	return nil
-}
-
-type httpError struct {
-	Status int
-	Body   string
-}
-
-func (e *httpError) Error() string {
-	return e.Body
 }
 
 func main() {
@@ -71,7 +31,7 @@ func main() {
 	ctx, cancel := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
 	defer cancel()
 
-	gateway := gatewayClient{baseURL: gatewayURL, hc: &http.Client{Timeout: 10 * time.Second}}
+	client := eventide.NewClient(gatewayURL)
 
 	r := chi.NewRouter()
 	r.Get("/healthz", func(w http.ResponseWriter, _ *http.Request) {
@@ -92,7 +52,7 @@ func main() {
 			return
 		}
 
-		go runTurn(context.Background(), gateway, in.ThreadID, in.TurnID, in.Input)
+		go runTurn(context.Background(), client, in.ThreadID, in.TurnID, in.Input)
 
 		w.WriteHeader(http.StatusAccepted)
 		_, _ = w.Write([]byte("accepted"))
@@ -109,34 +69,34 @@ func main() {
 	}
 }
 
-func runTurn(ctx context.Context, gateway gatewayClient, threadID, turnID string, input map[string]any) {
-	_ = gateway.Append(ctx, eventproto.Event{
-		SpecVersion: eventproto.SpecVersion,
+func runTurn(ctx context.Context, client *eventide.Client, threadID, turnID string, input map[string]any) {
+	_, _ = client.Append(ctx, eventide.Event{
+		SpecVersion: eventide.SpecVersion,
 		ThreadID:    threadID,
 		TurnID:      turnID,
-		Type:        eventproto.TypeTurnStarted,
-		Level:       eventproto.LevelInfo,
+		Type:        eventide.TypeTurnStarted,
+		Level:       eventide.LevelInfo,
 		Payload:     mustJSON(map[string]any{"input": input}),
 	})
 
-	_ = gateway.Append(ctx, eventproto.Event{
-		SpecVersion: eventproto.SpecVersion,
+	_, _ = client.Append(ctx, eventide.Event{
+		SpecVersion: eventide.SpecVersion,
 		ThreadID:    threadID,
 		TurnID:      turnID,
-		Type:        eventproto.TypeTurnInput,
-		Level:       eventproto.LevelInfo,
+		Type:        eventide.TypeTurnInput,
+		Level:       eventide.LevelInfo,
 		Payload:     mustJSON(map[string]any{"input": input}),
 	})
 
 	msgID := "m1"
-	chunks := []string{"hello ", "from ", "reference ", "agent"}
+	chunks := []string{"hello ", "from ", "reference ", "agent ", "using ", "go sdk"}
 	for _, c := range chunks {
-		_ = gateway.Append(ctx, eventproto.Event{
-			SpecVersion: eventproto.SpecVersion,
+		_, _ = client.Append(ctx, eventide.Event{
+			SpecVersion: eventide.SpecVersion,
 			ThreadID:    threadID,
 			TurnID:      turnID,
-			Type:        eventproto.TypeAssistantDelta,
-			Level:       eventproto.LevelInfo,
+			Type:        eventide.TypeAssistantDelta,
+			Level:       eventide.LevelInfo,
 			Payload:     mustJSON(map[string]any{"message_id": msgID, "delta": c}),
 		})
 		t := time.NewTimer(200 * time.Millisecond)
@@ -148,21 +108,21 @@ func runTurn(ctx context.Context, gateway gatewayClient, threadID, turnID string
 		}
 	}
 
-	_ = gateway.Append(ctx, eventproto.Event{
-		SpecVersion: eventproto.SpecVersion,
+	_, _ = client.Append(ctx, eventide.Event{
+		SpecVersion: eventide.SpecVersion,
 		ThreadID:    threadID,
 		TurnID:      turnID,
-		Type:        eventproto.TypeAssistantCompleted,
-		Level:       eventproto.LevelInfo,
+		Type:        eventide.TypeAssistantCompleted,
+		Level:       eventide.LevelInfo,
 		Payload:     mustJSON(map[string]any{"message_id": msgID}),
 	})
 
-	_ = gateway.Append(ctx, eventproto.Event{
-		SpecVersion: eventproto.SpecVersion,
+	_, _ = client.Append(ctx, eventide.Event{
+		SpecVersion: eventide.SpecVersion,
 		ThreadID:    threadID,
 		TurnID:      turnID,
-		Type:        eventproto.TypeTurnCompleted,
-		Level:       eventproto.LevelInfo,
+		Type:        eventide.TypeTurnCompleted,
+		Level:       eventide.LevelInfo,
 		Payload:     mustJSON(map[string]any{"ok": true}),
 	})
 }

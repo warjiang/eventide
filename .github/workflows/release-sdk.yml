@@ -1,0 +1,120 @@
+name: Release SDKs
+
+on:
+  push:
+    tags:
+      - 'sdk/nodejs/v*'
+      - 'sdk/python/v*'
+      - 'sdk/go/eventide/v*'
+  workflow_dispatch:
+    inputs:
+      sdk:
+        description: 'Which SDK to publish (for manual dispatch)'
+        required: true
+        type: choice
+        options:
+          - nodejs
+          - python
+          - go
+
+permissions:
+  contents: read
+
+jobs:
+  publish-nodejs:
+    name: Publish Node.js SDK
+    # Run if pushed a nodejs tag OR manually dispatched for nodejs
+    if: startsWith(github.ref, 'refs/tags/sdk/nodejs/v') || github.event.inputs.sdk == 'nodejs'
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: sdk/nodejs
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18.x'
+          registry-url: 'https://registry.npmjs.org'
+
+      - name: Publish to npm
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: |
+          if [ -z "${NODE_AUTH_TOKEN}" ]; then
+            echo "NPM_TOKEN is not set. Skipping actual publish (dry-run)."
+            npm publish --access public --dry-run
+          else
+            npm publish --access public
+          fi
+
+  publish-python:
+    name: Publish Python SDK
+    # Run if pushed a python tag OR manually dispatched for python
+    if: startsWith(github.ref, 'refs/tags/sdk/python/v') || github.event.inputs.sdk == 'python'
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: sdk/python
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.9'
+
+      - name: Install build dependencies
+        run: python -m pip install --upgrade pip build twine
+
+      - name: Build package
+        run: python -m build
+
+      - name: Publish to PyPI
+        env:
+          TWINE_USERNAME: __token__
+          TWINE_PASSWORD: ${{ secrets.PYPI_TOKEN }}
+        run: |
+          if [ -z "${TWINE_PASSWORD}" ]; then
+            echo "PYPI_TOKEN is not set. Skipping actual publish (dry-run via twine check)."
+            twine check dist/*
+          else
+            twine upload dist/*
+          fi
+
+  publish-go:
+    name: Publish Go SDK
+    # Run if pushed a go tag OR manually dispatched for go
+    if: startsWith(github.ref, 'refs/tags/sdk/go/eventide/v') || github.event.inputs.sdk == 'go'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.22'
+
+      - name: Trigger Go proxy cache refresh
+        run: |
+          # If manually triggered, we use a placeholder version or the latest tag. 
+          # For tag pushes, GITHUB_REF_NAME contains the full tag like sdk/go/eventide/v0.1.0
+          
+          VERSION="${GITHUB_REF_NAME}"
+          if [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
+            # Manually dispatched: try to get the latest tag for the go module
+            VERSION=$(git describe --tags --match "sdk/go/eventide/v*" --abbrev=0 2>/dev/null || echo "latest")
+          fi
+          
+          if [ "${VERSION}" == "latest" ]; then
+            echo "No specific version found for proxy refresh. Skipping."
+          else
+            # Extract the actual vX.Y.Z part for the go proxy (remove sdk/go/eventide/ prefix)
+            GO_VERSION=$(echo ${VERSION} | awk -F '/' '{print $NF}')
+            echo "Refreshing proxy.golang.org for github.com/${{ github.repository }}/sdk/go/eventide@${GO_VERSION}"
+            GOPROXY=proxy.golang.org go list -m github.com/${{ github.repository }}/sdk/go/eventide@${GO_VERSION} || true
+          fi

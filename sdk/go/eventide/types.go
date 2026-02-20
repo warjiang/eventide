@@ -1,4 +1,4 @@
-package eventproto
+package eventide
 
 const (
 	TypeThreadReady     = "thread.ready"

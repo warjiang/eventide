@@ -15,15 +15,15 @@ import (
 
 	_ "github.com/joho/godotenv/autoload"
 	"github.com/warjiang/eventide/internal/config"
-	"github.com/warjiang/eventide/internal/eventproto"
 	"github.com/warjiang/eventide/internal/httpx"
 	"github.com/warjiang/eventide/internal/id"
 	"github.com/warjiang/eventide/internal/logx"
 	"github.com/warjiang/eventide/internal/redisstreams"
+	"github.com/warjiang/eventide/sdk/go/eventide"
 )
 
 type ingestRequest struct {
-	Event eventproto.Event `json:"event"`
+	Event eventide.Event `json:"event"`
 }
 
 type ingestResponse struct {
@@ -31,7 +31,7 @@ type ingestResponse struct {
 }
 
 type appendRequest struct {
-	Event eventproto.Event `json:"event"`
+	Event eventide.Event `json:"event"`
 }
 
 type appendResponse struct {
@@ -74,7 +74,7 @@ func main() {
 
 		e := in.Event
 		if e.SpecVersion == "" {
-			e.SpecVersion = eventproto.SpecVersion
+			e.SpecVersion = eventide.SpecVersion
 		}
 		if e.EventID == "" {
 			idStr, err := id.NewULID()
@@ -154,7 +154,7 @@ func main() {
 	}
 }
 
-func ingestEvent(ctx context.Context, rdb *redisstreams.Client, trimMaxLen int64, e eventproto.Event) (string, bool, error) {
+func ingestEvent(ctx context.Context, rdb *redisstreams.Client, trimMaxLen int64, e eventide.Event) (string, bool, error) {
 	payloadStr := string(e.Payload)
 	encoded, err := e.Encode()
 	if err != nil {

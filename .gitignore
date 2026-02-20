@@ -5,6 +5,9 @@
 bin/
 dist/
 
+charts/**/charts/
+charts/**/Chart.lock
+
 .sisyphus/
 
 *.log

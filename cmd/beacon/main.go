@@ -14,12 +14,12 @@ import (
 	"github.com/go-chi/chi/v5"
 	_ "github.com/joho/godotenv/autoload"
 	"github.com/warjiang/eventide/internal/config"
-	"github.com/warjiang/eventide/internal/eventproto"
 	"github.com/warjiang/eventide/internal/httpx"
 	"github.com/warjiang/eventide/internal/logx"
 	"github.com/warjiang/eventide/internal/pgstore"
 	"github.com/warjiang/eventide/internal/redisstreams"
 	"github.com/warjiang/eventide/internal/s3store"
+	"github.com/warjiang/eventide/sdk/go/eventide"
 )
 
 // ── response types (read-api) ──────────────────────────────────────────
@@ -312,14 +312,14 @@ func main() {
 
 // ── SSE helpers (from realtime) ─────────────────────────────────────────
 
-func eventFromStream(threadID string, values map[string]any) (eventproto.Event, bool) {
+func eventFromStream(threadID string, values map[string]any) (eventide.Event, bool) {
 	seqAny, ok := values["seq"]
 	if !ok {
-		return eventproto.Event{}, false
+		return eventide.Event{}, false
 	}
 	seq, ok := toInt64(seqAny)
 	if !ok {
-		return eventproto.Event{}, false
+		return eventide.Event{}, false
 	}
 	eventID, _ := values["event_id"].(string)
 	turnID, _ := values["turn_id"].(string)
@@ -328,21 +328,21 @@ func eventFromStream(threadID string, values map[string]any) (eventproto.Event, 
 	levelStr, _ := values["level"].(string)
 	payloadStr, _ := values["payload"].(string)
 	if eventID == "" || turnID == "" || tsStr == "" || typeStr == "" || levelStr == "" || payloadStr == "" {
-		return eventproto.Event{}, false
+		return eventide.Event{}, false
 	}
 	ts, err := time.Parse(time.RFC3339Nano, tsStr)
 	if err != nil {
-		return eventproto.Event{}, false
+		return eventide.Event{}, false
 	}
-	return eventproto.Event{
-		SpecVersion: eventproto.SpecVersion,
+	return eventide.Event{
+		SpecVersion: eventide.SpecVersion,
 		EventID:     eventID,
 		ThreadID:    threadID,
 		TurnID:      turnID,
 		Seq:         seq,
 		TS:          ts,
 		Type:        typeStr,
-		Level:       eventproto.Level(levelStr),
+		Level:       eventide.Level(levelStr),
 		Payload:     []byte(payloadStr),
 	}, true
 }
