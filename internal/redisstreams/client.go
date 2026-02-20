@@ -167,20 +167,29 @@ func (c *Client) TrimMaxLenApprox(ctx context.Context, threadID string, maxLen i
 }
 
 func (c *Client) EnsureConsumerGroup(ctx context.Context, threadID, group string) error {
+	stream := StreamKey(threadID)
 	// MKSTREAM creates the stream if missing.
-	err := c.rdb.XGroupCreateMkStream(ctx, StreamKey(threadID), group, "$").Err()
-	if err != nil && !isBusyGroup(err) {
-		return err
+	// Use "0" to consume from the beginning so no messages are missed
+	// when the consumer group is created after messages already exist.
+	err := c.rdb.XGroupCreateMkStream(ctx, stream, group, "0").Err()
+	if err != nil && isBusyGroup(err) {
+		// Group already exists — reset its starting offset to "0" so that
+		// any messages produced before the group was originally created
+		// (with "$") are now visible to consumers.
+		return c.rdb.XGroupSetID(ctx, stream, group, "0").Err()
 	}
-	return nil
+	return err
 }
 
 func (c *Client) EnsureConsumerGroupOnStream(ctx context.Context, stream, group string) error {
-	err := c.rdb.XGroupCreateMkStream(ctx, stream, group, "$").Err()
-	if err != nil && !isBusyGroup(err) {
-		return err
+	// Use "0" to consume from the beginning so no messages are missed
+	// when the consumer group is created after messages already exist.
+	err := c.rdb.XGroupCreateMkStream(ctx, stream, group, "0").Err()
+	if err != nil && isBusyGroup(err) {
+		// Group already exists — reset its starting offset to "0".
+		return c.rdb.XGroupSetID(ctx, stream, group, "0").Err()
 	}
-	return nil
+	return err
 }
 
 type GroupMessage struct {

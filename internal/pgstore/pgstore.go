@@ -127,7 +127,7 @@ func (s *Store) PersistEvent(ctx context.Context, tenantID string, idleTimeoutSe
 	_, err := s.pool.Exec(ctx, `INSERT INTO agent_events(
   thread_id, seq, event_id, turn_id, ts, type, level, payload, source, trace, tags
 ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11)
-ON CONFLICT (event_id) DO NOTHING`,
+ON CONFLICT DO NOTHING`,
 		e.ThreadID,
 		e.Seq,
 		e.EventID,
