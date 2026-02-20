@@ -11,10 +11,10 @@ import (
 
 	_ "github.com/joho/godotenv/autoload"
 	"github.com/warjiang/eventide/internal/config"
-	"github.com/warjiang/eventide/internal/eventproto"
 	"github.com/warjiang/eventide/internal/logx"
 	"github.com/warjiang/eventide/internal/pgstore"
 	"github.com/warjiang/eventide/internal/redisstreams"
+	"github.com/warjiang/eventide/sdk/go/eventide"
 )
 
 func main() {
@@ -132,7 +132,7 @@ func handleMessage(
 		_, _ = rdb.XAck(ctx, stream, group, m.ID)
 		return false, true
 	}
-	e, err := eventproto.DecodeEvent([]byte(evtStr))
+	e, err := eventide.DecodeEvent([]byte(evtStr))
 	if err != nil {
 		log.Printf("skip msg %s: decode event: %v", m.ID, err)
 		_, _ = rdb.XAck(ctx, stream, group, m.ID)

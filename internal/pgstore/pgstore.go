@@ -10,7 +10,7 @@ import (
 
 	"github.com/jackc/pgx/v5"
 
-	"github.com/warjiang/eventide/internal/eventproto"
+	"github.com/warjiang/eventide/sdk/go/eventide"
 
 	"github.com/jackc/pgx/v5/pgxpool"
 )
@@ -113,7 +113,7 @@ func (s *Store) ApplyMigration(ctx context.Context, version string, sql string) 
 	return nil
 }
 
-func (s *Store) PersistEvent(ctx context.Context, tenantID string, idleTimeoutSeconds int, e eventproto.Event) error {
+func (s *Store) PersistEvent(ctx context.Context, tenantID string, idleTimeoutSeconds int, e eventide.Event) error {
 	if strings.TrimSpace(tenantID) == "" {
 		return errors.New("tenantID is required")
 	}
@@ -145,7 +145,7 @@ ON CONFLICT DO NOTHING`,
 	}
 
 	status := "active"
-	if e.Type == eventproto.TypeTurnCompleted || e.Type == eventproto.TypeTurnFailed || e.Type == eventproto.TypeTurnCancelled {
+	if e.Type == eventide.TypeTurnCompleted || e.Type == eventide.TypeTurnFailed || e.Type == eventide.TypeTurnCancelled {
 		status = "idle"
 	}
 
@@ -263,15 +263,15 @@ LIMIT $3`, threadID, fromSeq, limit)
 		if len(tags) > 0 {
 			_ = json.Unmarshal(tags, &tagsAny)
 		}
-		e := eventproto.Event{
-			SpecVersion: eventproto.SpecVersion,
+		e := eventide.Event{
+			SpecVersion: eventide.SpecVersion,
 			EventID:     eventID,
 			ThreadID:    thID,
 			TurnID:      turnID,
 			Seq:         seq,
 			TS:          ts,
 			Type:        typeStr,
-			Level:       eventproto.Level(level),
+			Level:       eventide.Level(level),
 			Payload:     payload,
 			Source:      sourceAny,
 			Trace:       traceAny,
@@ -355,15 +355,15 @@ LIMIT $4`, threadID, fromSeqInclusive, toSeqInclusive, limit)
 		if len(tags) > 0 {
 			_ = json.Unmarshal(tags, &tagsAny)
 		}
-		e := eventproto.Event{
-			SpecVersion: eventproto.SpecVersion,
+		e := eventide.Event{
+			SpecVersion: eventide.SpecVersion,
 			EventID:     eventID,
 			ThreadID:    thID,
 			TurnID:      turnID,
 			Seq:         seq,
 			TS:          ts,
 			Type:        typeStr,
-			Level:       eventproto.Level(level),
+			Level:       eventide.Level(level),
 			Payload:     payload,
 			Source:      sourceAny,
 			Trace:       traceAny,
@@ -458,32 +458,32 @@ FROM event_archives WHERE archive_id=$1`, archiveID).
 	return a, true, nil
 }
 
-func turnStatus(e eventproto.Event) string {
+func turnStatus(e eventide.Event) string {
 	switch e.Type {
-	case eventproto.TypeTurnStarted:
+	case eventide.TypeTurnStarted:
 		return "started"
-	case eventproto.TypeTurnCompleted:
+	case eventide.TypeTurnCompleted:
 		return "completed"
-	case eventproto.TypeTurnFailed:
+	case eventide.TypeTurnFailed:
 		return "failed"
-	case eventproto.TypeTurnCancelled:
+	case eventide.TypeTurnCancelled:
 		return "cancelled"
 	default:
 		return "running"
 	}
 }
 
-func turnCompletedAt(e eventproto.Event) any {
+func turnCompletedAt(e eventide.Event) any {
 	switch e.Type {
-	case eventproto.TypeTurnCompleted, eventproto.TypeTurnFailed, eventproto.TypeTurnCancelled:
+	case eventide.TypeTurnCompleted, eventide.TypeTurnFailed, eventide.TypeTurnCancelled:
 		return e.TS
 	default:
 		return nil
 	}
 }
 
-func turnInputPayload(e eventproto.Event) any {
-	if e.Type != eventproto.TypeTurnInput {
+func turnInputPayload(e eventide.Event) any {
+	if e.Type != eventide.TypeTurnInput {
 		return json.RawMessage("{}")
 	}
 	return e.Payload

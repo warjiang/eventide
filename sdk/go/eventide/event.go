@@ -1,4 +1,4 @@
-package eventproto
+package eventide
 
 import (
 	"encoding/json"
