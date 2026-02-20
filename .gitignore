@@ -15,3 +15,4 @@ charts/**/Chart.lock
 .env
 charts/eventide/values-onpremise.yaml
 charts/install.yaml
+*.pyc
