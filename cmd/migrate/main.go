@@ -2,9 +2,7 @@ package main
 
 import (
 	"context"
-	"io/fs"
 	"log"
-	"os"
 	"path/filepath"
 	"sort"
 	"strings"
@@ -13,6 +11,7 @@ import (
 	"github.com/warjiang/eventide/internal/config"
 	"github.com/warjiang/eventide/internal/logx"
 	"github.com/warjiang/eventide/internal/pgstore"
+	"github.com/warjiang/eventide/migrations"
 )
 
 func main() {
@@ -35,12 +34,12 @@ func main() {
 		log.Fatalf("pg migrations table: %v", err)
 	}
 
-	files, err := listSQL("migrations")
+	files, err := listSQL()
 	if err != nil {
 		log.Fatalf("list: %v", err)
 	}
 	for _, f := range files {
-		b, err := os.ReadFile(f)
+		b, err := migrations.FS.ReadFile(f)
 		if err != nil {
 			log.Fatalf("read %s: %v", f, err)
 		}
@@ -60,22 +59,16 @@ func main() {
 	}
 }
 
-func listSQL(dir string) ([]string, error) {
+func listSQL() ([]string, error) {
 	var out []string
-	err := filepath.WalkDir(dir, func(path string, d fs.DirEntry, err error) error {
-		if err != nil {
-			return err
-		}
-		if d.IsDir() {
-			return nil
-		}
-		if strings.HasSuffix(d.Name(), ".sql") {
-			out = append(out, path)
-		}
-		return nil
-	})
+	entries, err := migrations.FS.ReadDir(".")
 	if err != nil {
 		return nil, err
+	}
+	for _, entry := range entries {
+		if !entry.IsDir() && strings.HasSuffix(entry.Name(), ".sql") {
+			out = append(out, entry.Name())
+		}
 	}
 	sort.Strings(out)
 	return out, nil

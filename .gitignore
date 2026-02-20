@@ -13,3 +13,5 @@ charts/**/Chart.lock
 *.log
 
 .env
+charts/eventide/values-onpremise.yaml
+charts/install.yaml
