@@ -43,9 +43,15 @@ jobs:
           registry-url: 'https://registry.npmjs.org'
 
       - name: Publish to npm
-        # No NODE_AUTH_TOKEN required if using NPM Trusted Publishing (OIDC)
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: |
-          npm publish --access public --provenance
+          if [ -z "${NODE_AUTH_TOKEN}" ]; then
+            echo "NPM_TOKEN is not set. Skipping actual publish (dry-run)."
+            npm publish --access public --dry-run
+          else
+            npm publish --access public --provenance
+          fi
 
   publish-python:
     name: Publish Python SDK
