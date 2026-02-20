@@ -483,7 +483,7 @@ func turnCompletedAt(e eventide.Event) any {
 }
 
 func turnInputPayload(e eventide.Event) any {
-	if e.Type != eventide.TypeTurnInput {
+	if e.Type != eventide.TypeTurnStarted {
 		return json.RawMessage("{}")
 	}
 	return e.Payload

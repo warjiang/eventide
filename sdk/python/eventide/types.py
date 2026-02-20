@@ -12,21 +12,31 @@ SPEC_VERSION = "agent-events/1.0"
 class EventType(str, Enum):
     """Event type constants — mirrors internal/eventproto/types.go."""
 
-    THREAD_READY = "thread.ready"
-    THREAD_HEARTBEAT = "thread.heartbeat"
-    THREAD_SUSPENDED = "thread.suspended"
-    THREAD_RESUMED = "thread.resumed"
-
+    # Lifecycle
     TURN_STARTED = "turn.started"
-    TURN_INPUT = "turn.input"
     TURN_COMPLETED = "turn.completed"
     TURN_FAILED = "turn.failed"
     TURN_CANCELLED = "turn.cancelled"
 
-    ASSISTANT_DELTA = "assistant.message.delta"
-    ASSISTANT_COMPLETED = "assistant.message.completed"
+    # Message
+    MESSAGE_DELTA = "message.delta"
+    MESSAGE_COMPLETED = "message.completed"
 
-    STATE_CHECKPOINT = "state.checkpoint"
+    # Tool
+    TOOL_CALL_STARTED = "tool.call.started"
+    TOOL_CALL_ARGS_DELTA = "tool.call.args.delta"
+    TOOL_CALL_COMPLETED = "tool.call.completed"
+    TOOL_CALL_ERROR = "tool.call.error"
+
+    # State
+    STATE_SNAPSHOT = "state.snapshot"
+    STATE_DELTA = "state.delta"
+
+    # Custom
+    CUSTOM = "custom"
+
+    # Thread
+    THREAD_READY = "thread.ready"
 
 
 class Level(str, Enum):

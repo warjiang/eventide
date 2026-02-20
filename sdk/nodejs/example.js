@@ -14,36 +14,44 @@ async function runTurn(client, threadId, turnId, input) {
         payload: { input },
     });
 
-    // 2. turn.input
-    await client.append({
-        threadId,
-        turnId,
-        type: EventType.TurnInput,
-        level: Level.Info,
-        payload: { input },
-    });
-
-    // 3. stream assistant message deltas
+    // 2. stream message deltas
     const msgId = "m1";
     const chunks = ["hello ", "from ", "nodejs ", "sdk"];
     for (const delta of chunks) {
         await client.append({
             threadId,
             turnId,
-            type: EventType.AssistantDelta,
+            type: EventType.MessageDelta,
             level: Level.Info,
             payload: { message_id: msgId, delta },
         });
         await sleep(200);
     }
 
-    // 4. assistant.message.completed
+    // 3. message.completed
     await client.append({
         threadId,
         turnId,
-        type: EventType.AssistantCompleted,
+        type: EventType.MessageCompleted,
         level: Level.Info,
         payload: { message_id: msgId },
+    });
+
+    // 4. tool.call (optional demonstration)
+    await client.append({
+        threadId,
+        turnId,
+        type: EventType.ToolCallStarted,
+        level: Level.Info,
+        payload: { tool: "fetch_data" },
+    });
+    await sleep(200);
+    await client.append({
+        threadId,
+        turnId,
+        type: EventType.ToolCallCompleted,
+        level: Level.Info,
+        payload: { tool: "fetch_data", result: "success" },
     });
 
     // 5. turn.completed

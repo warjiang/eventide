@@ -1,19 +1,29 @@
 package eventide
 
 const (
-	TypeThreadReady     = "thread.ready"
-	TypeThreadHeartbeat = "thread.heartbeat"
-	TypeThreadSuspended = "thread.suspended"
-	TypeThreadResumed   = "thread.resumed"
-
+	// Lifecycle
 	TypeTurnStarted   = "turn.started"
-	TypeTurnInput     = "turn.input"
 	TypeTurnCompleted = "turn.completed"
 	TypeTurnFailed    = "turn.failed"
 	TypeTurnCancelled = "turn.cancelled"
 
-	TypeAssistantDelta     = "assistant.message.delta"
-	TypeAssistantCompleted = "assistant.message.completed"
+	// Message
+	TypeMessageDelta     = "message.delta"
+	TypeMessageCompleted = "message.completed"
 
-	TypeStateCheckpoint = "state.checkpoint"
+	// Tool
+	TypeToolCallStarted   = "tool.call.started"
+	TypeToolCallArgsDelta = "tool.call.args.delta"
+	TypeToolCallCompleted = "tool.call.completed"
+	TypeToolCallError     = "tool.call.error"
+
+	// State
+	TypeStateSnapshot = "state.snapshot"
+	TypeStateDelta    = "state.delta"
+
+	// Custom
+	TypeCustom = "custom"
+
+	// Thread
+	TypeThreadReady = "thread.ready"
 )
