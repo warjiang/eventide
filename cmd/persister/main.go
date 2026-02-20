@@ -9,6 +9,7 @@ import (
 	"syscall"
 	"time"
 
+	_ "github.com/joho/godotenv/autoload"
 	"github.com/warjiang/eventide/internal/config"
 	"github.com/warjiang/eventide/internal/eventproto"
 	"github.com/warjiang/eventide/internal/logx"

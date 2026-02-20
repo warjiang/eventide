@@ -5,9 +5,10 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/jackc/pgx/v5"
 	"strings"
 	"time"
+
+	"github.com/jackc/pgx/v5"
 
 	"github.com/warjiang/eventide/internal/eventproto"
 
@@ -126,7 +127,7 @@ func (s *Store) PersistEvent(ctx context.Context, tenantID string, idleTimeoutSe
 	_, err := s.pool.Exec(ctx, `INSERT INTO agent_events(
   thread_id, seq, event_id, turn_id, ts, type, level, payload, source, trace, tags
 ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11)
-ON CONFLICT (event_id) DO NOTHING`,
+ON CONFLICT DO NOTHING`,
 		e.ThreadID,
 		e.Seq,
 		e.EventID,
@@ -288,16 +289,23 @@ LIMIT $3`, threadID, fromSeq, limit)
 	return out, nil
 }
 
-func (s *Store) ListEventsForArchive(ctx context.Context, threadID string, fromSeqInclusive int64, toSeqInclusive int64, limit int64) ([]json.RawMessage, error) {
+// ArchiveQueryResult holds the events and actual seq range returned by ListEventsForArchive.
+type ArchiveQueryResult struct {
+	Events []json.RawMessage
+	MinSeq int64 // actual minimum seq in the result set
+	MaxSeq int64 // actual maximum seq in the result set
+}
+
+func (s *Store) ListEventsForArchive(ctx context.Context, threadID string, fromSeqInclusive int64, toSeqInclusive int64, limit int64) (ArchiveQueryResult, error) {
 	threadID = strings.TrimSpace(threadID)
 	if threadID == "" {
-		return nil, errors.New("threadID is required")
+		return ArchiveQueryResult{}, errors.New("threadID is required")
 	}
 	if fromSeqInclusive < 0 {
 		fromSeqInclusive = 0
 	}
 	if toSeqInclusive < fromSeqInclusive {
-		return nil, errors.New("invalid range")
+		return ArchiveQueryResult{}, errors.New("invalid range")
 	}
 	if limit <= 0 {
 		limit = 5000
@@ -308,10 +316,11 @@ WHERE thread_id=$1 AND seq >= $2 AND seq <= $3
 ORDER BY seq ASC
 LIMIT $4`, threadID, fromSeqInclusive, toSeqInclusive, limit)
 	if err != nil {
-		return nil, err
+		return ArchiveQueryResult{}, err
 	}
 	defer rows.Close()
-	var out []json.RawMessage
+	var result ArchiveQueryResult
+	first := true
 	for rows.Next() {
 		var (
 			thID    string
@@ -330,8 +339,13 @@ LIMIT $4`, threadID, fromSeqInclusive, toSeqInclusive, limit)
 		var traceAny map[string]any
 		var tagsAny map[string]string
 		if err := rows.Scan(&thID, &seq, &eventID, &turnID, &ts, &typeStr, &level, &payload, &source, &trace, &tags); err != nil {
-			return nil, err
+			return ArchiveQueryResult{}, err
 		}
+		if first {
+			result.MinSeq = seq
+			first = false
+		}
+		result.MaxSeq = seq // rows are ordered ASC, so the last one is the max
 		if len(source) > 0 {
 			_ = json.Unmarshal(source, &sourceAny)
 		}
@@ -357,14 +371,14 @@ LIMIT $4`, threadID, fromSeqInclusive, toSeqInclusive, limit)
 		}
 		b, err := e.Encode()
 		if err != nil {
-			return nil, err
+			return ArchiveQueryResult{}, err
 		}
-		out = append(out, b)
+		result.Events = append(result.Events, b)
 	}
 	if err := rows.Err(); err != nil {
-		return nil, err
+		return ArchiveQueryResult{}, err
 	}
-	return out, nil
+	return result, nil
 }
 
 func (s *Store) InsertArchive(ctx context.Context, a EventArchive) error {

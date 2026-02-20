@@ -9,6 +9,7 @@ import (
 	"sort"
 	"strings"
 
+	_ "github.com/joho/godotenv/autoload"
 	"github.com/warjiang/eventide/internal/config"
 	"github.com/warjiang/eventide/internal/logx"
 	"github.com/warjiang/eventide/internal/pgstore"

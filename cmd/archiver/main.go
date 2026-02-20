@@ -13,6 +13,7 @@ import (
 	"syscall"
 	"time"
 
+	_ "github.com/joho/godotenv/autoload"
 	"github.com/warjiang/eventide/internal/config"
 	"github.com/warjiang/eventide/internal/id"
 	"github.com/warjiang/eventide/internal/logx"
@@ -33,12 +34,6 @@ func main() {
 	}
 	fromSeq := getenvInt64Default("ARCHIVE_FROM_SEQ", 1)
 	toSeq := getenvInt64Default("ARCHIVE_TO_SEQ", 0)
-	if toSeq == 0 {
-		toSeq = fromSeq + 999
-	}
-	if toSeq < fromSeq {
-		log.Fatalf("invalid archive range")
-	}
 
 	ctx, cancel := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
 	defer cancel()
@@ -50,6 +45,24 @@ func main() {
 	defer store.Close()
 	if err := store.Ping(ctx); err != nil {
 		log.Fatalf("pg ping: %v", err)
+	}
+
+	// If toSeq is not explicitly set, use the thread's actual last_seq from DB
+	// to avoid recording a phantom range that extends beyond real data.
+	if toSeq == 0 {
+		th, found, err := store.GetThread(ctx, threadID)
+		if err != nil {
+			log.Fatalf("get thread: %v", err)
+		}
+		if !found {
+			log.Printf("thread %q not found, nothing to archive", threadID)
+			return
+		}
+		toSeq = th.LastSeq
+	}
+	if toSeq < fromSeq {
+		log.Printf("no events to archive (fromSeq=%d > toSeq=%d)", fromSeq, toSeq)
+		return
 	}
 
 	s3c, err := s3store.New(ctx, s3store.Config{
@@ -68,12 +81,12 @@ func main() {
 		log.Fatalf("s3 bucket: %v", err)
 	}
 
-	events, err := store.ListEventsForArchive(ctx, threadID, fromSeq, toSeq, 20000)
+	result, err := store.ListEventsForArchive(ctx, threadID, fromSeq, toSeq, 20000)
 	if err != nil {
 		log.Fatalf("list events: %v", err)
 	}
-	if len(events) == 0 {
-		log.Printf("no events in range")
+	if len(result.Events) == 0 {
+		log.Printf("no events in range [%d, %d]", fromSeq, toSeq)
 		return
 	}
 
@@ -83,7 +96,7 @@ func main() {
 	}
 	objectKey := s3c.Key("threads/" + threadID + "/archives/" + archiveID + ".jsonl.gz")
 
-	buf, err := encodeJSONLGzip(events)
+	buf, err := encodeJSONLGzip(result.Events)
 	if err != nil {
 		log.Fatalf("encode: %v", err)
 	}
@@ -92,21 +105,23 @@ func main() {
 		log.Fatalf("put object: %v", err)
 	}
 
+	// Record the actual seq range from the query results, not the requested range.
+	// This ensures that the next archive run can start from MaxSeq+1 without gaps.
 	if err := store.InsertArchive(ctx, pgstore.EventArchive{
 		ArchiveID:       archiveID,
 		ThreadID:        threadID,
-		FromSeq:         fromSeq,
-		ToSeq:           toSeq,
+		FromSeq:         result.MinSeq,
+		ToSeq:           result.MaxSeq,
 		ObjectKey:       objectKey,
 		ContentEncoding: "gzip",
 		ContentType:     "application/x-ndjson",
-		EventCount:      int64(len(events)),
+		EventCount:      int64(len(result.Events)),
 		CreatedAt:       time.Now().UTC(),
 	}); err != nil {
 		log.Fatalf("insert archive: %v", err)
 	}
 
-	log.Printf("archived %d events to s3://%s/%s", len(events), cfg.S3.Bucket, objectKey)
+	log.Printf("archived %d events (seq %d~%d) to s3://%s/%s", len(result.Events), result.MinSeq, result.MaxSeq, cfg.S3.Bucket, objectKey)
 }
 
 func encodeJSONLGzip(events []json.RawMessage) ([]byte, error) {
