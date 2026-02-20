@@ -69,5 +69,8 @@ class Event:
     def to_dict(self) -> dict:
         """Serialize to the JSON structure expected by POST /events:append."""
         d = asdict(self)
-        # Remove None optional fields to keep the payload clean
-        return {k: v for k, v in d.items() if v is not None}
+        # Remove None optional fields, and empty string fields that should be omitted if unset
+        return {
+            k: v for k, v in d.items()
+            if v is not None and not (isinstance(v, str) and v == "" and k in ["ts", "event_id", "spec_version"])
+        }
