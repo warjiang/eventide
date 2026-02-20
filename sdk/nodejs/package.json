@@ -1,0 +1,23 @@
+{
+  "name": "@eventide/sdk",
+  "version": "0.1.0",
+  "description": "Node.js SDK for the Eventide event gateway",
+  "type": "module",
+  "main": "index.js",
+  "exports": {
+    ".": "./index.js"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "files": [
+    "index.js"
+  ],
+  "license": "MIT",
+  "keywords": [
+    "eventide",
+    "agent",
+    "events",
+    "gateway"
+  ]
+}
