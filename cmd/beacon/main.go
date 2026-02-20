@@ -294,6 +294,13 @@ func main() {
 					return
 				}
 				flusher.Flush()
+
+				if evt.Type == eventide.TypeTurnCompleted {
+					if err := writeSSE(w, evt.Seq, "done", []byte("[DONE]")); err != nil {
+						return
+					}
+					flusher.Flush()
+				}
 			}
 		}
 	})
@@ -396,24 +403,24 @@ func (e *requestError) Error() string {
 }
 
 func writeSSE(w http.ResponseWriter, id int64, event string, data []byte) error {
-	if _, err := w.Write([]byte("id: ")); err != nil {
-		return err
-	}
-	if _, err := w.Write([]byte(strconv.FormatInt(id, 10))); err != nil {
-		return err
-	}
-	if _, err := w.Write([]byte("\n")); err != nil {
-		return err
-	}
-	if _, err := w.Write([]byte("event: ")); err != nil {
-		return err
-	}
-	if _, err := w.Write([]byte(event)); err != nil {
-		return err
-	}
-	if _, err := w.Write([]byte("\n")); err != nil {
-		return err
-	}
+	// if _, err := w.Write([]byte("id: ")); err != nil {
+	// 	return err
+	// }
+	// if _, err := w.Write([]byte(strconv.FormatInt(id, 10))); err != nil {
+	// 	return err
+	// }
+	// if _, err := w.Write([]byte("\n")); err != nil {
+	// 	return err
+	// }
+	// if _, err := w.Write([]byte("event: ")); err != nil {
+	// 	return err
+	// }
+	// if _, err := w.Write([]byte(event)); err != nil {
+	// 	return err
+	// }
+	// if _, err := w.Write([]byte("\n")); err != nil {
+	// 	return err
+	// }
 	if _, err := w.Write([]byte("data: ")); err != nil {
 		return err
 	}
