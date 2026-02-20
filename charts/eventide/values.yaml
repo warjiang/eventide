@@ -1,0 +1,137 @@
+nameOverride: ""
+fullnameOverride: ""
+
+imagePullSecrets: []
+
+secrets:
+  create: true
+
+config:
+  redis:
+    addr: ""
+    username: ""
+    password: ""
+    db: 0
+
+  postgres:
+    connString: ""
+
+  s3:
+    endpoint: ""
+    region: "us-east-1"
+    bucket: "eventide"
+    accessKeyID: "eventide"
+    secretAccessKey: "eventide"
+    prefix: "eventide"
+    usePathStyle: true
+
+  streams:
+    trimMaxLen: 100000
+
+gateway:
+  enabled: true
+  replicaCount: 1
+  image:
+    repository: ghcr.io/warjiang/eventide/gateway
+    tag: "latest"
+    pullPolicy: IfNotPresent
+  service:
+    type: ClusterIP
+    port: 18081
+  resources: {}
+
+beacon:
+  enabled: true
+  replicaCount: 1
+  image:
+    repository: ghcr.io/warjiang/eventide/beacon
+    tag: "latest"
+    pullPolicy: IfNotPresent
+  service:
+    type: ClusterIP
+    port: 18082
+  resources: {}
+
+persister:
+  enabled: true
+  replicaCount: 1
+  image:
+    repository: ghcr.io/warjiang/eventide/persister
+    tag: "latest"
+    pullPolicy: IfNotPresent
+  tenantID: "default"
+  idleTimeoutSeconds: 900
+  group: "persist"
+  consumer: ""
+  dlqStream: "stream:global:dlq"
+  maxRetries: 5
+  resources: {}
+
+referenceAgent:
+  enabled: true
+  replicaCount: 1
+  image:
+    repository: ghcr.io/warjiang/eventide/reference-agent
+    tag: "latest"
+    pullPolicy: IfNotPresent
+  service:
+    type: ClusterIP
+    port: 18080
+  resources: {}
+
+migrate:
+  enabled: true
+  image:
+    repository: ghcr.io/warjiang/eventide/migrate
+    tag: "latest"
+    pullPolicy: IfNotPresent
+
+archiver:
+  enabled: false
+  image:
+    repository: ghcr.io/warjiang/eventide/archiver
+    tag: "latest"
+    pullPolicy: IfNotPresent
+  schedule: ""
+  threadID: ""
+  fromSeq: 1
+  toSeq: 0
+
+postgresql:
+  enabled: true
+  auth:
+    username: eventide
+    password: eventide
+    database: eventide
+  primary:
+    persistence:
+      enabled: true
+      size: 8Gi
+
+redis:
+  enabled: true
+  auth:
+    enabled: false
+    password: ""
+  master:
+    persistence:
+      enabled: true
+      size: 8Gi
+
+seaweedfs:
+  enabled: true
+  image:
+    repository: chrislusf/seaweedfs
+    tag: "4.02"
+    pullPolicy: IfNotPresent
+  persistence:
+    enabled: true
+    size: 20Gi
+    storageClassName: ""
+  service:
+    type: ClusterIP
+    ports:
+      master: 9333
+      volume: 8080
+      public: 8888
+      s3: 8333

@@ -1,0 +1,11 @@
+1. Gateway endpoint:
+   kubectl port-forward svc/{{ include "eventide.gatewayServiceName" . }} 18081:{{ .Values.gateway.service.port }}
+   curl -fsS http://127.0.0.1:18081/healthz
+
+2. Beacon endpoint:
+   kubectl port-forward svc/{{ include "eventide.fullname" . }}-beacon 18082:{{ .Values.beacon.service.port }}
+   curl -fsS http://127.0.0.1:18082/healthz
+
+3. Reference agent endpoint:
+   kubectl port-forward svc/{{ include "eventide.fullname" . }}-reference-agent 18080:{{ .Values.referenceAgent.service.port }}
+   curl -fsS -X POST http://127.0.0.1:18080/turns -H 'content-type: application/json' -d '{"thread_id":"01J00000000000000000000000","turn_id":"01J00000000000000000000001","input":{"text":"hello"}}'

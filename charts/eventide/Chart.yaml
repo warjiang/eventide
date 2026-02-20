@@ -1,0 +1,16 @@
+apiVersion: v2
+name: eventide
+description: Scalable, event-sourced Agent execution architecture (gateway/beacon/persister/reference-agent)
+type: application
+version: 0.0.0
+appVersion: "0.0.0"
+
+dependencies:
+  - name: postgresql
+    version: "^13.0.0"
+    repository: "https://charts.bitnami.com/bitnami"
+    condition: postgresql.enabled
+  - name: redis
+    version: "^18.0.0"
+    repository: "https://charts.bitnami.com/bitnami"
+    condition: redis.enabled
