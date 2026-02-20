@@ -12,21 +12,31 @@ export const SPEC_VERSION = "agent-events/1.0";
  * @enum {string}
  */
 export const EventType = Object.freeze({
-  ThreadReady:        "thread.ready",
-  ThreadHeartbeat:    "thread.heartbeat",
-  ThreadSuspended:    "thread.suspended",
-  ThreadResumed:      "thread.resumed",
-
+  // Lifecycle
   TurnStarted:        "turn.started",
-  TurnInput:          "turn.input",
   TurnCompleted:      "turn.completed",
   TurnFailed:         "turn.failed",
   TurnCancelled:      "turn.cancelled",
 
-  AssistantDelta:     "assistant.message.delta",
-  AssistantCompleted: "assistant.message.completed",
+  // Message
+  MessageDelta:       "message.delta",
+  MessageCompleted:   "message.completed",
 
-  StateCheckpoint:    "state.checkpoint",
+  // Tool
+  ToolCallStarted:    "tool.call.started",
+  ToolCallArgsDelta:  "tool.call.args.delta",
+  ToolCallCompleted:  "tool.call.completed",
+  ToolCallError:      "tool.call.error",
+
+  // State
+  StateSnapshot:      "state.snapshot",
+  StateDelta:         "state.delta",
+
+  // Custom
+  Custom:             "custom",
+
+  // Thread
+  ThreadReady:        "thread.ready",
 });
 
 /**

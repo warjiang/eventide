@@ -79,15 +79,6 @@ func runTurn(ctx context.Context, client *eventide.Client, threadID, turnID stri
 		Payload:     mustJSON(map[string]any{"input": input}),
 	})
 
-	_, _ = client.Append(ctx, eventide.Event{
-		SpecVersion: eventide.SpecVersion,
-		ThreadID:    threadID,
-		TurnID:      turnID,
-		Type:        eventide.TypeTurnInput,
-		Level:       eventide.LevelInfo,
-		Payload:     mustJSON(map[string]any{"input": input}),
-	})
-
 	msgID := "m1"
 	chunks := []string{"hello ", "from ", "reference ", "agent ", "using ", "go sdk"}
 	for _, c := range chunks {
@@ -95,7 +86,7 @@ func runTurn(ctx context.Context, client *eventide.Client, threadID, turnID stri
 			SpecVersion: eventide.SpecVersion,
 			ThreadID:    threadID,
 			TurnID:      turnID,
-			Type:        eventide.TypeAssistantDelta,
+			Type:        eventide.TypeMessageDelta,
 			Level:       eventide.LevelInfo,
 			Payload:     mustJSON(map[string]any{"message_id": msgID, "delta": c}),
 		})
@@ -112,7 +103,7 @@ func runTurn(ctx context.Context, client *eventide.Client, threadID, turnID stri
 		SpecVersion: eventide.SpecVersion,
 		ThreadID:    threadID,
 		TurnID:      turnID,
-		Type:        eventide.TypeAssistantCompleted,
+		Type:        eventide.TypeMessageCompleted,
 		Level:       eventide.LevelInfo,
 		Payload:     mustJSON(map[string]any{"message_id": msgID}),
 	})

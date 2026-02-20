@@ -23,35 +23,43 @@ async def run_turn(
         payload={"input": user_input},
     ))
 
-    # 2. turn.input
-    await client.append(Event(
-        thread_id=thread_id,
-        turn_id=turn_id,
-        type=EventType.TURN_INPUT,
-        level=Level.INFO,
-        payload={"input": user_input},
-    ))
-
-    # 3. stream assistant message deltas
+    # 2. stream message deltas
     msg_id = "m1"
     chunks = ["hello ", "from ", "python ", "sdk"]
     for delta in chunks:
         await client.append(Event(
             thread_id=thread_id,
             turn_id=turn_id,
-            type=EventType.ASSISTANT_DELTA,
+            type=EventType.MESSAGE_DELTA,
             level=Level.INFO,
             payload={"message_id": msg_id, "delta": delta},
         ))
         await asyncio.sleep(0.2)
 
-    # 4. assistant.message.completed
+    # 3. message.completed
     await client.append(Event(
         thread_id=thread_id,
         turn_id=turn_id,
-        type=EventType.ASSISTANT_COMPLETED,
+        type=EventType.MESSAGE_COMPLETED,
         level=Level.INFO,
         payload={"message_id": msg_id},
+    ))
+
+    # 4. tool.call (optional demonstration)
+    await client.append(Event(
+        thread_id=thread_id,
+        turn_id=turn_id,
+        type=EventType.TOOL_CALL_STARTED,
+        level=Level.INFO,
+        payload={"tool": "search", "arguments": {}},
+    ))
+    await asyncio.sleep(0.5)
+    await client.append(Event(
+        thread_id=thread_id,
+        turn_id=turn_id,
+        type=EventType.TOOL_CALL_COMPLETED,
+        level=Level.INFO,
+        payload={"tool": "search", "result": "Python SDK found"},
     ))
 
     # 5. turn.completed
