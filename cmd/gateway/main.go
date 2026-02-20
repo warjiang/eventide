@@ -140,7 +140,7 @@ func main() {
 	})
 
 	addr := cfg.HTTP.Addr
-	if env := os.Getenv("EVENT_GATEWAY_ADDR"); env != "" {
+	if env := os.Getenv("EVENTIDE_GATEWAY_ADDR"); env != "" {
 		addr = env
 	}
 	srv := httpx.New(addr, r)

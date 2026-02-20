@@ -13,6 +13,7 @@ import (
 
 	"github.com/go-chi/chi/v5"
 
+	_ "github.com/joho/godotenv/autoload"
 	"github.com/warjiang/eventide/internal/config"
 	"github.com/warjiang/eventide/internal/eventproto"
 	"github.com/warjiang/eventide/internal/httpx"
@@ -28,7 +29,7 @@ func main() {
 	}
 
 	addr := cfg.HTTP.Addr
-	if env := os.Getenv("REALTIME_ADDR"); env != "" {
+	if env := os.Getenv("EVENTIDE_REALTIME_ADDR"); env != "" {
 		addr = env
 	}
 
@@ -49,7 +50,7 @@ func main() {
 
 	r.Get("/threads/{threadID}/events/stream", func(w http.ResponseWriter, req *http.Request) {
 		threadID := chi.URLParam(req, "threadID")
-		afterSeq, resumeRequested, err := parseAfterSeq(req)
+		afterSeq, _, err := parseAfterSeq(req)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
@@ -66,10 +67,7 @@ func main() {
 			return
 		}
 
-		cursor := "0"
-		if !resumeRequested {
-			cursor = "$"
-		}
+		cursor := "0" // Always start from beginning to support produce-before-consume
 		_, _ = w.Write([]byte("retry: 2000\n\n"))
 		flusher.Flush()
 
