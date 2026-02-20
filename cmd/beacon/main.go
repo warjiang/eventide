@@ -253,8 +253,8 @@ func main() {
 		}
 
 		cursor := "0" // Always start from beginning to support produce-before-consume
-		_, _ = w.Write([]byte("retry: 2000\n\n"))
-		flusher.Flush()
+		// _, _ = w.Write([]byte("retry: 2000\n\n"))
+		// flusher.Flush()
 
 		stream := redisstreams.StreamKey(threadID)
 		ctx := req.Context()
@@ -295,11 +295,12 @@ func main() {
 				}
 				flusher.Flush()
 
-				if evt.Type == eventide.TypeTurnCompleted {
+				if evt.Type == eventide.TypeTurnCompleted || evt.Type == eventide.TypeTurnFailed || evt.Type == eventide.TypeTurnCancelled {
 					if err := writeSSE(w, evt.Seq, "done", []byte("[DONE]")); err != nil {
 						return
 					}
 					flusher.Flush()
+					return // Terminate the connection after the turn is done
 				}
 			}
 		}
