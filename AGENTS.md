@@ -18,16 +18,15 @@
           ┌───────────────┼───────────────┐
           ▼               ▼               ▼
    ┌────────────┐  ┌────────────┐  ┌────────────┐
-   │  realtime  │  │  persister │  │  reference  │
-   │  (SSE)     │  │  (PG warm) │  │  -agent     │
+   │   beacon   │  │  persister │  │  reference  │
+   │ (REST+SSE) │  │  (PG warm) │  │  -agent     │
    └────────────┘  └────────────┘  └────────────┘
                           │
-                   ┌──────┴──────┐
-                   ▼             ▼
-            ┌──────────┐  ┌──────────┐
-            │ read-api │  │ archiver │
-            │ (query)  │  │ (S3 cold)│
-            └──────────┘  └──────────┘
+                          ▼
+                   ┌──────────┐
+                   │ archiver │
+                   │ (S3 cold)│
+                   └──────────┘
 ```
 
 ### Data Tiers
@@ -43,9 +42,8 @@
 ```
 cmd/                     # Executable entry points
 ├── gateway/             # HTTP API — accepts turns, publishes to Redis
-├── realtime/            # SSE endpoint — streams events to clients
+├── beacon/              # REST + SSE — queries PG/S3 + streams from Redis
 ├── persister/           # Consumer — writes Redis events to Postgres
-├── read-api/            # HTTP API — queries events/archives from PG/S3
 ├── archiver/            # CLI tool — archives event ranges to S3
 ├── migrate/             # DB migration runner
 └── reference-agent/     # Example agent consuming events
@@ -110,10 +108,10 @@ make build
 # Run migrations
 bin/migrate
 
-# Run milestone-1 (gateway + realtime + reference-agent)
+# Run milestone-1 (gateway + beacon + reference-agent)
 ./scripts/run-local-m1.sh
 
-# Run milestone-2.5 (persister + read-api)
+# Run milestone-2.5 (persister + beacon)
 ./scripts/run-local-m25.sh
 ```
 

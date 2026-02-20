@@ -10,7 +10,7 @@ make build
 HTTP_ADDR=127.0.0.1:18081 bin/event-gateway &
 GW_PID=$!
 
-HTTP_ADDR=127.0.0.1:18082 bin/realtime &
+HTTP_ADDR=127.0.0.1:18082 bin/beacon &
 RT_PID=$!
 
 REFERENCE_AGENT_ADDR=127.0.0.1:18080 EVENT_GATEWAY_URL=http://127.0.0.1:18081 bin/reference-agent &
@@ -23,7 +23,7 @@ trap cleanup EXIT
 
 echo "running:"
 echo "- event-gateway  : http://127.0.0.1:18081"
-echo "- realtime (SSE) : http://127.0.0.1:18082"
+echo "- beacon (SSE)   : http://127.0.0.1:18082"
 echo "- reference-agent: http://127.0.0.1:18080"
 
 echo ""

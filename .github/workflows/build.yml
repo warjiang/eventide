@@ -52,11 +52,10 @@ jobs:
       matrix:
         app: 
           - gateway
-          - realtime
+          - beacon
           - reference-agent
           - migrate
           - persister
-          - read-api
           - archiver
 
     permissions:

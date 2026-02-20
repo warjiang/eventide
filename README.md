@@ -35,11 +35,11 @@ make build
 HTTP_ADDR=127.0.0.1:18081 bin/event-gateway
 ```
 
-Realtime SSE:
+Beacon (REST + SSE):
 
 ```bash
 make build
-HTTP_ADDR=127.0.0.1:18082 bin/realtime
+HTTP_ADDR=127.0.0.1:18082 bin/beacon
 ```
 
 Reference agent:
@@ -73,7 +73,7 @@ This starts Postgres persistence (warm store) and SeaweedFS S3 gateway (cold sto
 docker compose up -d
 ```
 
-2) Run persister + read-api:
+2) Run persister + beacon:
 
 ```bash
 chmod +x scripts/run-local-m25.sh
