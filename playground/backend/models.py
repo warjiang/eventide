@@ -1,0 +1,93 @@
+"""Pydantic models for the Playground API."""
+
+from __future__ import annotations
+
+import time
+from enum import Enum
+from typing import Any
+
+from pydantic import BaseModel, Field
+
+
+# ── Agent Models ─────────────────────────────────────────────────────────
+
+class AgentInfo(BaseModel):
+    name: str
+    namespace: str
+    status: str = "Unknown"
+    created_at: str | None = None
+
+
+class AgentListResponse(BaseModel):
+    agents: list[AgentInfo]
+
+
+# ── Invoke Models ────────────────────────────────────────────────────────
+
+class InvokeRequest(BaseModel):
+    agent_name: str
+    namespace: str = "default"
+    prompt: str
+
+
+class InvokeResponse(BaseModel):
+    thread_id: str
+    output: str | None = None
+    agent: str | None = None
+    timestamp: str | None = None
+
+
+# ── Session Models ───────────────────────────────────────────────────────
+
+class MessageRole(str, Enum):
+    USER = "user"
+    ASSISTANT = "assistant"
+
+
+class AgentEvent(BaseModel):
+    """A single SSE event from the agent execution trace."""
+    event_id: str = ""
+    thread_id: str = ""
+    turn_id: str = ""
+    seq: int = 0
+    ts: str = ""
+    type: str = ""
+    level: str = "info"
+    payload: dict[str, Any] = Field(default_factory=dict)
+
+
+class Message(BaseModel):
+    role: MessageRole
+    content: str
+    thread_id: str | None = None
+    events: list[AgentEvent] = Field(default_factory=list)
+    timestamp: float = Field(default_factory=time.time)
+
+
+class Session(BaseModel):
+    session_id: str
+    agent_name: str
+    namespace: str = "default"
+    title: str = "New Chat"
+    created_at: float = Field(default_factory=time.time)
+    messages: list[Message] = Field(default_factory=list)
+
+
+class SessionSummary(BaseModel):
+    """Session metadata returned in list (without full messages)."""
+    session_id: str
+    agent_name: str
+    namespace: str = "default"
+    title: str
+    created_at: float
+    message_count: int = 0
+
+
+class SessionListResponse(BaseModel):
+    sessions: list[SessionSummary]
+
+
+class CreateSessionRequest(BaseModel):
+    agent_name: str
+    namespace: str = "default"
+    title: str = "New Chat"
