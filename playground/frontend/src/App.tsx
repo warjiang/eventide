@@ -227,15 +227,15 @@ export default function App() {
     return (
         <div className="flex h-screen w-screen bg-background text-foreground overflow-hidden">
             {/* Sidebar */}
-            <aside className="w-[320px] min-w-[320px] bg-muted/20 border-r border-border flex flex-col hidden sm:flex">
-                <div className="px-8 py-6 border-b border-border">
+            <aside className="w-[280px] min-w-[280px] bg-muted/20 border-r border-border flex flex-col hidden sm:flex">
+                <div className="px-5 py-4 border-b border-border">
                     <div className="flex items-center justify-between">
-                        <h1 className="text-base font-semibold bg-gradient-to-br from-primary to-purple-400 bg-clip-text text-transparent tracking-tight flex items-center gap-2">
+                        <h1 className="text-sm font-semibold bg-gradient-to-br from-primary to-purple-400 bg-clip-text text-transparent tracking-tight flex items-center gap-2">
                             <Zap className="w-4 h-4 text-primary" /> Agent Playground
                         </h1>
                         <ThemeToggle theme={theme} setTheme={setTheme} isDark={isDark} />
                     </div>
-                    <p className="text-[11px] text-muted-foreground mt-1.5">
+                    <p className="text-[10px] text-muted-foreground mt-1">
                         Eventide — Real-time Agent Traces
                     </p>
                 </div>
@@ -254,12 +254,12 @@ export default function App() {
             {/* Main area */}
             <main className="flex-1 flex flex-col overflow-hidden bg-background">
                 {!selectedAgent ? (
-                    <div className="flex-1 flex flex-col items-center justify-center gap-5 text-muted-foreground p-10">
-                        <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-primary/10 to-transparent border border-border flex items-center justify-center text-primary shadow-sm mb-2">
-                            <Bot className="w-10 h-10" />
+                    <div className="flex-1 flex flex-col items-center justify-center gap-4 text-muted-foreground p-8">
+                        <div className="w-16 h-16 rounded-xl bg-gradient-to-br from-primary/10 to-transparent border border-border flex items-center justify-center text-primary shadow-sm">
+                            <Bot className="w-8 h-8" />
                         </div>
-                        <h2 className="text-xl font-semibold text-foreground">Select an Agent</h2>
-                        <p className="text-sm max-w-sm text-center content-center leading-relaxed">
+                        <h2 className="text-lg font-semibold text-foreground">Select an Agent</h2>
+                        <p className="text-sm max-w-sm text-center leading-relaxed">
                             Choose an agent from the sidebar to start a conversation.
                         </p>
                     </div>
@@ -272,12 +272,12 @@ export default function App() {
                         />
 
                         {error && (
-                            <div className="px-6 py-2 bg-destructive/10 border-t border-destructive/20 text-destructive text-sm text-center flex items-center justify-center gap-1.5">
+                            <div className="px-4 py-2 bg-destructive/10 border-t border-destructive/20 text-destructive text-sm text-center flex items-center justify-center gap-1.5">
                                 <AlertTriangle className="w-4 h-4" /> {error}
                             </div>
                         )}
 
-                        <div className="flex justify-center px-4 py-4">
+                        <div className="flex justify-center px-4 py-3">
                             <div className="w-full max-w-3xl">
                                 <ChatInput
                                     onSend={handleSend}

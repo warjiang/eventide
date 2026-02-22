@@ -45,22 +45,22 @@ export default function AgentSelector({ selectedAgent, onSelect }: AgentSelector
 
     if (loading) {
         return (
-            <div className="px-8 py-6 border-b border-border/50">
-                <label className="text-xs font-semibold text-muted-foreground uppercase tracking-widest mb-3 block">Agent</label>
-                <div className="h-10 rounded-lg bg-surface animate-pulse" />
+            <div className="px-4 py-3 border-b border-border/50">
+                <label className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-2 block">Agent</label>
+                <div className="h-8 rounded-md bg-surface animate-pulse" />
             </div>
         )
     }
 
     if (error) {
         return (
-            <div className="px-8 py-6 border-b border-border/50">
-                <label className="text-xs font-semibold text-muted-foreground uppercase tracking-widest mb-3 block">Agent</label>
-                <div className="text-sm text-destructive flex flex-col items-center gap-3 p-4 rounded-lg bg-destructive/5 border border-destructive/20">
-                    <span className="flex items-center gap-2"><AlertTriangle className="w-4 h-4" /> {error}</span>
+            <div className="px-4 py-3 border-b border-border/50">
+                <label className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-2 block">Agent</label>
+                <div className="text-xs text-destructive flex flex-col items-center gap-2 p-3 rounded-md bg-destructive/5 border border-destructive/20">
+                    <span className="flex items-center gap-1.5"><AlertTriangle className="w-3.5 h-3.5" /> {error}</span>
                     <button
                         onClick={loadAgents}
-                        className="px-4 py-1.5 bg-secondary hover:bg-secondary/80 text-secondary-foreground rounded-lg text-xs transition-all duration-200 cursor-pointer hover:scale-105 active:scale-95"
+                        className="px-3 py-1 bg-secondary hover:bg-secondary/80 text-secondary-foreground rounded-md text-xs transition-all duration-200 cursor-pointer hover:scale-105 active:scale-95"
                     >
                         Retry
                     </button>
@@ -72,8 +72,8 @@ export default function AgentSelector({ selectedAgent, onSelect }: AgentSelector
     const selectedKey = selectedAgent ? `${selectedAgent.namespace}/${selectedAgent.name}` : ''
 
     return (
-        <div className="px-8 py-6 border-b border-border/50">
-            <label className="text-xs font-semibold text-muted-foreground uppercase tracking-widest mb-3 block">Agent</label>
+        <div className="px-4 py-3 border-b border-border/50">
+            <label className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-2 block">Agent</label>
 
             <Select
                 value={selectedKey}
@@ -83,10 +83,10 @@ export default function AgentSelector({ selectedAgent, onSelect }: AgentSelector
                 }}
                 disabled={agents.length === 0}
             >
-                <SelectTrigger className="w-full h-10 rounded-lg border-border/60 focus:ring-2 focus:ring-primary/30 transition-all duration-200 cursor-pointer">
+                <SelectTrigger className="w-full h-8 text-sm rounded-md border-border/60 focus:ring-2 focus:ring-primary/30 transition-all duration-200 cursor-pointer">
                     <SelectValue placeholder="Select an agent" />
                 </SelectTrigger>
-                <SelectContent className="rounded-xl border-border/60 shadow-xl">
+                <SelectContent className="rounded-lg border-border/60 shadow-xl">
                     {agents.length === 0 ? (
                         <SelectItem value="none" disabled>No agents available</SelectItem>
                     ) : (
@@ -94,10 +94,10 @@ export default function AgentSelector({ selectedAgent, onSelect }: AgentSelector
                             <SelectItem 
                                 key={`${a.namespace}/${a.name}`} 
                                 value={`${a.namespace}/${a.name}`}
-                                className="cursor-pointer"
+                                className="cursor-pointer text-sm"
                             >
                                 <span className="font-medium">{a.name}</span>
-                                <span className="text-muted-foreground ml-2">({a.namespace})</span>
+                                <span className="text-muted-foreground ml-2 text-xs">({a.namespace})</span>
                             </SelectItem>
                         ))
                     )}
@@ -105,10 +105,10 @@ export default function AgentSelector({ selectedAgent, onSelect }: AgentSelector
             </Select>
 
             {selectedAgent && (
-                <div className="mt-3">
-                    <Badge variant="outline" className="gap-2 font-normal text-xs text-muted-foreground border-border/40 bg-surface/50">
-                        <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-                        <span className="font-mono text-[11px]">{selectedAgent.namespace}/{selectedAgent.name}</span>
+                <div className="mt-2">
+                    <Badge variant="outline" className="gap-1.5 font-normal text-[10px] text-muted-foreground border-border/40 bg-surface/50 py-0.5">
+                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                        <span className="font-mono text-[10px]">{selectedAgent.namespace}/{selectedAgent.name}</span>
                     </Badge>
                 </div>
             )}

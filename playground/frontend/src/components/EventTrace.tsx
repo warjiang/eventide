@@ -33,9 +33,9 @@ export default function EventTrace({ events, isStreaming }: EventTraceProps) {
     }
 
     return (
-        <div className="relative space-y-4">
+        <div className="relative space-y-2">
             {/* Timeline line */}
-            <div className="absolute left-[5px] top-2 bottom-2 w-[2px] bg-border/40" />
+            <div className="absolute left-[4px] top-1.5 bottom-1.5 w-[1.5px] bg-border/40" />
             
             {rendered.map((item, i) => {
                 if (item.type === 'tool_pair') {
@@ -46,14 +46,14 @@ export default function EventTrace({ events, isStreaming }: EventTraceProps) {
             })}
 
             {isStreaming && (
-                <div className="relative flex items-center gap-3 py-1">
-                    <div className="relative z-10 w-3 h-3 rounded-full border-2 border-background bg-border ring-2 ring-primary/20 animate-pulse" />
-                    <div className="flex gap-1 items-center">
-                        <span className="w-1.5 h-1.5 rounded-full bg-primary/80 animate-bounce [animation-delay:-0.3s]" />
-                        <span className="w-1.5 h-1.5 rounded-full bg-primary/80 animate-bounce [animation-delay:-0.15s]" />
-                        <span className="w-1.5 h-1.5 rounded-full bg-primary/80 animate-bounce" />
+                <div className="relative flex items-center gap-2 py-0.5">
+                    <div className="relative z-10 w-2.5 h-2.5 rounded-full border-2 border-background bg-border ring-2 ring-primary/20 animate-pulse" />
+                    <div className="flex gap-0.5 items-center">
+                        <span className="w-1 h-1 rounded-full bg-primary/80 animate-bounce [animation-delay:-0.3s]" />
+                        <span className="w-1 h-1 rounded-full bg-primary/80 animate-bounce [animation-delay:-0.15s]" />
+                        <span className="w-1 h-1 rounded-full bg-primary/80 animate-bounce" />
                     </div>
-                    <span className="text-sm text-muted-foreground">Processing...</span>
+                    <span className="text-xs text-muted-foreground">Processing...</span>
                 </div>
             )}
         </div>
@@ -66,14 +66,14 @@ function EventItem({ evt }: { evt: any }) {
     switch (type) {
         case 'turn.started':
             return (
-                <div className="relative flex items-start gap-3 py-1">
-                    <div className="relative z-10 mt-1.5 w-3 h-3 rounded-full border-2 border-background bg-primary ring-2 ring-primary/20 shrink-0" />
+                <div className="relative flex items-start gap-2 py-0.5">
+                    <div className="relative z-10 mt-1 w-2.5 h-2.5 rounded-full border-2 border-background bg-primary ring-2 ring-primary/20 shrink-0" />
                     <div>
-                        <Badge variant="outline" className="text-[10px] font-mono bg-primary/10 text-primary hover:bg-primary/20 mb-1">
+                        <Badge variant="outline" className="text-[9px] font-mono bg-primary/10 text-primary hover:bg-primary/20 mb-0.5 py-0 h-4">
                             TURN STARTED
                         </Badge>
                         {evt.payload?.input && (
-                            <div className="text-xs text-muted-foreground">Input: {String(evt.payload.input)}</div>
+                            <div className="text-[10px] text-muted-foreground">Input: {String(evt.payload.input)}</div>
                         )}
                     </div>
                 </div>
@@ -81,23 +81,23 @@ function EventItem({ evt }: { evt: any }) {
 
         case 'message.delta':
             return (
-                <div className="relative flex items-start gap-3 py-1">
-                    <div className="relative z-10 mt-1.5 w-3 h-3 rounded-full border-2 border-background bg-amber-500 shrink-0" />
+                <div className="relative flex items-start gap-2 py-0.5">
+                    <div className="relative z-10 mt-1 w-2.5 h-2.5 rounded-full border-2 border-background bg-amber-500 shrink-0" />
                     <div>
-                        <Badge variant="outline" className="text-[10px] font-mono bg-amber-500/10 text-amber-500 hover:bg-amber-500/20 mb-1">
+                        <Badge variant="outline" className="text-[9px] font-mono bg-amber-500/10 text-amber-500 hover:bg-amber-500/20 mb-0.5 py-0 h-4">
                             MESSAGE
                         </Badge>
-                        <div className="text-sm whitespace-pre-wrap">{evt.payload?.delta}</div>
+                        <div className="text-xs whitespace-pre-wrap">{evt.payload?.delta}</div>
                     </div>
                 </div>
             )
 
         case 'message.completed':
             return (
-                <div className="relative flex items-start gap-3 py-1">
-                    <div className="relative z-10 mt-1.5 w-3 h-3 rounded-full border-2 border-background bg-emerald-500 shrink-0" />
+                <div className="relative flex items-start gap-2 py-0.5">
+                    <div className="relative z-10 mt-1 w-2.5 h-2.5 rounded-full border-2 border-background bg-emerald-500 shrink-0" />
                     <div>
-                        <Badge variant="outline" className="text-[10px] font-mono bg-emerald-500/10 text-emerald-500 hover:bg-emerald-500/20">
+                        <Badge variant="outline" className="text-[9px] font-mono bg-emerald-500/10 text-emerald-500 hover:bg-emerald-500/20 py-0 h-4">
                             MESSAGE COMPLETED
                         </Badge>
                     </div>
@@ -106,14 +106,14 @@ function EventItem({ evt }: { evt: any }) {
 
         case 'turn.completed':
             return (
-                <div className="relative flex items-start gap-3 py-1">
-                    <div className="relative z-10 mt-1.5 w-3 h-3 rounded-full border-2 border-background bg-emerald-500 ring-2 ring-emerald-500/20 shadow-[0_0_8px_rgba(16,185,129,0.4)] shrink-0" />
+                <div className="relative flex items-start gap-2 py-0.5">
+                    <div className="relative z-10 mt-1 w-2.5 h-2.5 rounded-full border-2 border-background bg-emerald-500 ring-2 ring-emerald-500/20 shadow-[0_0_6px_rgba(16,185,129,0.4)] shrink-0" />
                     <div>
-                        <Badge variant="outline" className="text-[10px] font-mono bg-emerald-500/10 text-emerald-500 hover:bg-emerald-500/20 mb-1">
+                        <Badge variant="outline" className="text-[9px] font-mono bg-emerald-500/10 text-emerald-500 hover:bg-emerald-500/20 mb-0.5 py-0 h-4">
                             TURN COMPLETED
                         </Badge>
                         {evt.payload?.output && (
-                            <div className="text-xs text-muted-foreground">{String(evt.payload.output)}</div>
+                            <div className="text-[10px] text-muted-foreground">{String(evt.payload.output)}</div>
                         )}
                     </div>
                 </div>
@@ -121,39 +121,39 @@ function EventItem({ evt }: { evt: any }) {
 
         case 'turn.failed':
             return (
-                <div className="relative flex items-start gap-3 py-1">
-                    <div className="relative z-10 mt-1.5 w-3 h-3 rounded-full border-2 border-background bg-destructive ring-2 ring-destructive/20 shrink-0" />
+                <div className="relative flex items-start gap-2 py-0.5">
+                    <div className="relative z-10 mt-1 w-2.5 h-2.5 rounded-full border-2 border-background bg-destructive ring-2 ring-destructive/20 shrink-0" />
                     <div>
-                        <Badge variant="destructive" className="text-[10px] font-mono mb-1">
+                        <Badge variant="destructive" className="text-[9px] font-mono mb-0.5 py-0 h-4">
                             TURN FAILED
                         </Badge>
-                        {evt.payload?.error && <div className="text-xs text-destructive/80">{evt.payload.error}</div>}
+                        {evt.payload?.error && <div className="text-[10px] text-destructive/80">{evt.payload.error}</div>}
                     </div>
                 </div>
             )
 
         case 'state.delta':
             return (
-                <div className="relative flex items-start gap-3 py-1">
-                    <div className="relative z-10 mt-1.5 w-3 h-3 rounded-full border-2 border-background bg-blue-500 shrink-0" />
+                <div className="relative flex items-start gap-2 py-0.5">
+                    <div className="relative z-10 mt-1 w-2.5 h-2.5 rounded-full border-2 border-background bg-blue-500 shrink-0" />
                     <div>
-                        <Badge variant="outline" className="text-[10px] font-mono bg-blue-500/10 text-blue-500 hover:bg-blue-500/20 mb-1">
+                        <Badge variant="outline" className="text-[9px] font-mono bg-blue-500/10 text-blue-500 hover:bg-blue-500/20 mb-0.5 py-0 h-4">
                             STATE DELTA
                         </Badge>
-                        <div className="text-xs text-muted-foreground break-all">{JSON.stringify(evt.payload)}</div>
+                        <div className="text-[10px] text-muted-foreground break-all">{JSON.stringify(evt.payload)}</div>
                     </div>
                 </div>
             )
 
         default:
             return (
-                <div className="relative flex items-start gap-3 py-1">
-                    <div className="relative z-10 mt-1.5 w-3 h-3 rounded-full border-2 border-background bg-cyan-500 shrink-0" />
+                <div className="relative flex items-start gap-2 py-0.5">
+                    <div className="relative z-10 mt-1 w-2.5 h-2.5 rounded-full border-2 border-background bg-cyan-500 shrink-0" />
                     <div>
-                        <Badge variant="outline" className="text-[10px] font-mono bg-cyan-500/10 text-cyan-500 hover:bg-cyan-500/20 mb-1">
+                        <Badge variant="outline" className="text-[9px] font-mono bg-cyan-500/10 text-cyan-500 hover:bg-cyan-500/20 mb-0.5 py-0 h-4">
                             {type.toUpperCase()}
                         </Badge>
-                        <div className="text-xs text-muted-foreground break-all">{JSON.stringify(evt.payload)}</div>
+                        <div className="text-[10px] text-muted-foreground break-all">{JSON.stringify(evt.payload)}</div>
                     </div>
                 </div>
             )
@@ -166,25 +166,25 @@ function ToolCallCard({ started, completed }: { started: any, completed: any }) 
     const result = completed?.payload?.result
 
     return (
-        <div className="relative flex items-start gap-3 py-1 group">
-            <div className="relative z-10 mt-1.5 w-3 h-3 rounded-full border-2 border-background bg-cyan-500 ring-2 ring-cyan-500/10 shrink-0" />
-            <div className="flex-1">
-                <Badge variant="outline" className="text-[10px] font-mono bg-cyan-500/10 text-cyan-500 hover:bg-cyan-500/20 mb-1.5">
+        <div className="relative flex items-start gap-2 py-0.5 group">
+            <div className="relative z-10 mt-1 w-2.5 h-2.5 rounded-full border-2 border-background bg-cyan-500 ring-2 ring-cyan-500/10 shrink-0" />
+            <div className="flex-1 min-w-0">
+                <Badge variant="outline" className="text-[9px] font-mono bg-cyan-500/10 text-cyan-500 hover:bg-cyan-500/20 mb-1 py-0 h-4">
                     TOOL CALL
                 </Badge>
-                <div className="mt-1.5 p-4 bg-card border border-border rounded-lg shadow-sm">
-                    <div className="font-semibold text-sm text-cyan-600 dark:text-cyan-400 mb-1 flex items-center gap-2">
-                        <span className="flex items-center gap-1.5"><PenTool className="w-3.5 h-3.5" /> {toolName}</span>
-                        {completed && <span className="text-emerald-500 text-xs flex items-center gap-1"><CheckCircle2 className="w-3 h-3" /> Done</span>}
-                        {!completed && <span className="text-muted-foreground text-xs animate-pulse flex items-center gap-1"><Clock className="w-3 h-3" /> Executing</span>}
+                <div className="mt-1 p-2.5 bg-card border border-border rounded-md shadow-sm">
+                    <div className="font-semibold text-xs text-cyan-600 dark:text-cyan-400 mb-1 flex items-center gap-1.5 flex-wrap">
+                        <span className="flex items-center gap-1"><PenTool className="w-3 h-3" /> {toolName}</span>
+                        {completed && <span className="text-emerald-500 text-[10px] flex items-center gap-0.5"><CheckCircle2 className="w-2.5 h-2.5" /> Done</span>}
+                        {!completed && <span className="text-muted-foreground text-[10px] animate-pulse flex items-center gap-0.5"><Clock className="w-2.5 h-2.5" /> Executing</span>}
                     </div>
                     {args && (
-                        <div className="font-mono text-[11px] text-muted-foreground bg-muted/50 p-2.5 rounded max-h-32 overflow-y-auto">
+                        <div className="font-mono text-[10px] text-muted-foreground bg-muted/50 p-2 rounded max-h-24 overflow-y-auto">
                             {JSON.stringify(args, null, 2)}
                         </div>
                     )}
                     {result && (
-                        <div className="mt-2.5 p-2.5 bg-emerald-500/10 border border-emerald-500/20 rounded font-mono text-[11px] text-emerald-600 dark:text-emerald-400 overflow-x-auto">
+                        <div className="mt-2 p-2 bg-emerald-500/10 border border-emerald-500/20 rounded font-mono text-[10px] text-emerald-600 dark:text-emerald-400 overflow-x-auto">
                             → {String(result)}
                         </div>
                     )}
