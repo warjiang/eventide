@@ -72,15 +72,15 @@ class SimpleAgentHandler(BaseHTTPRequestHandler):
 
     
 
-    async def _handle_runcmd_async(self, prompt: str, thread_id: str):
+    async def _handle_runcmd_async(self, prompt: str, thread_id: str, turn_id: str = None):
         """异步处理 agent 执行（后台任务），使用流式输出."""
         try:
             # 创建 GatewayClient 并发送事件
             GATEWAY_URL = os.getenv("EVENT_GATEWAY_URL", "http://127.0.0.1:18081")
             client = GatewayClient(GATEWAY_URL)
             
-            # 生成 turn_id
-            turn_id = f"turn_{uuid.uuid4().hex[:8]}"
+            # 使用传入的 turn_id 或生成新的
+            turn_id = turn_id or f"turn_{uuid.uuid4().hex[:8]}"
             
             await client.append(Event(
                 thread_id=thread_id,
@@ -194,14 +194,17 @@ class SimpleAgentHandler(BaseHTTPRequestHandler):
             # Handle different types of prompts (support both flat and nested 'payload' schemas)
             payload = data.get('payload', {})
             prompt = data.get('prompt') or payload.get('prompt', '')
-            # 如果 data 中有 thread_id 则复用，否则创建新的
-            thread_id = data.get('thread_id') or f"thread_{datetime.now().strftime('%Y%m%d%H%M%S')}_{uuid.uuid4().hex[:8]}"
+            # 如果 data/payload 中有 thread_id/turn_id 则复用，否则创建新的
+            thread_id = data.get('thread_id') or payload.get('thread_id') or f"thread_{datetime.now().strftime('%Y%m%d%H%M%S')}_{uuid.uuid4().hex[:8]}"
+            turn_id = data.get('turn_id') or payload.get('turn_id')
             response_data = {
                 "output": "success",
                 "agent": "hello-agent",
                 "timestamp": self._get_timestamp(),
                 "thread_id": thread_id,
             }
+            if turn_id:
+                response_data["turn_id"] = turn_id
             
             
             # 先返回响应
@@ -209,7 +212,7 @@ class SimpleAgentHandler(BaseHTTPRequestHandler):
             
             # 在后台线程中运行异步任务
             def run_async_in_thread():
-                asyncio.run(self._handle_runcmd_async(prompt, thread_id))
+                asyncio.run(self._handle_runcmd_async(prompt, thread_id, turn_id))
             
             thread = threading.Thread(target=run_async_in_thread)
             thread.daemon = True
