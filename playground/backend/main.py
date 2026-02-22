@@ -23,6 +23,8 @@ from typing import AsyncGenerator, Optional
 import httpx
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import FileResponse
+from fastapi.staticfiles import StaticFiles
 from kubernetes import client, config
 from sse_starlette.sse import EventSourceResponse
 
@@ -383,6 +385,12 @@ async def create_session(req: CreateSessionRequest):
     return session
 
 
+@app.get("/healthz")
+async def healthz():
+    """Health check for Kubernetes probes."""
+    return {"status": "ok"}
+
+
 @app.get("/api/sessions/{session_id}", response_model=Session)
 async def get_session(session_id: str):
     """Get a session by ID."""
@@ -415,3 +423,21 @@ async def delete_session(session_id: str):
         raise HTTPException(status_code=404, detail="Session not found")
     del sessions[session_id]
     return {"ok": True}
+
+
+# ── Static Files (Frontend) ──────────────────────────────────────────────
+
+static_dir = os.path.join(os.path.dirname(__file__), "static")
+if os.path.isdir(static_dir):
+    @app.exception_handler(404)
+    async def custom_404_handler(request: Request, exc: HTTPException):
+        # Serve index.html for SPA routing if the path doesn't start with /api/
+        if not request.url.path.startswith("/api/"):
+            index_file = os.path.join(static_dir, "index.html")
+            if os.path.isfile(index_file):
+                return FileResponse(index_file)
+        # Otherwise, return the normal 404
+        from fastapi.responses import JSONResponse
+        return JSONResponse({"detail": "Not Found"}, status_code=404)
+
+    app.mount("/", StaticFiles(directory=static_dir, html=True), name="static")
