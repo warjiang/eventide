@@ -28,10 +28,15 @@ class InvokeRequest(BaseModel):
     agent_name: str
     namespace: str = "default"
     prompt: str
+    session_id: str | None = None     # playground session_id, used to look up agentcube_session_id
+    thread_id: str | None = None      # reuse existing thread_id for multi-turn conversations
+    turn_id: str | None = None        # use existing turn_id if provided
 
 
 class InvokeResponse(BaseModel):
     thread_id: str
+    turn_id: str | None = None
+    agentcube_session_id: str | None = None  # agentcube runtime session id for pod reuse
     output: str | None = None
     agent: str | None = None
     timestamp: str | None = None
@@ -73,10 +78,15 @@ class Session(BaseModel):
     created_at: float = Field(default_factory=time.time)
     session_timeout_ms: int = 10 * 60 * 1000  # Default 10 minutes
     messages: list[Message] = Field(default_factory=list)
-    
-    def is_expired(self) -> bool:
-        """Check if session has expired based on session_timeout_ms."""
-        return time.time() * 1000 > (self.created_at * 1000 + self.session_timeout_ms)
+    # agentcube runtime tracking
+    agentcube_session_id: str | None = None   # agentcube pod session id
+    last_invoke_at: float | None = None       # timestamp of last successful invoke
+
+    def is_agentcube_session_expired(self) -> bool:
+        """Check if the agentcube session has expired based on last_invoke_at + session_timeout_ms."""
+        if not self.agentcube_session_id or not self.last_invoke_at:
+            return True
+        return time.time() * 1000 > (self.last_invoke_at * 1000 + self.session_timeout_ms)
 
 
 class SessionSummary(BaseModel):
@@ -88,6 +98,8 @@ class SessionSummary(BaseModel):
     title: str
     created_at: float
     session_timeout_ms: int = 10 * 60 * 1000
+    agentcube_session_id: str | None = None
+    last_invoke_at: float | None = None
     message_count: int = 0
 
 

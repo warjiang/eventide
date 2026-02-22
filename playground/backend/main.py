@@ -15,6 +15,7 @@ import json
 import logging
 import os
 import re
+import time
 import uuid
 from contextlib import asynccontextmanager
 from typing import AsyncGenerator, Optional
@@ -214,39 +215,74 @@ async def list_agents():
 # ── Invoke ───────────────────────────────────────────────────────────────
 
 @app.post("/api/invoke", response_model=InvokeResponse)
-async def invoke_agent(req: InvokeRequest, request: Request):
-    """Invoke an agent via the AgentCube router and return the thread_id.
+async def invoke_agent(req: InvokeRequest):
+    """Invoke an agent via the AgentCube router.
     
-    Supports session reuse via x-agentcube-session-id header.
+    Manages agentcube session_id for pod reuse and thread_id for multi-turn conversations.
     """
     try:
-        # Use the AgentCube HTTP API to invoke the agent
-        # The router URL pattern is from agentcube router logs: POST /v1/namespaces/:namespace/agent-runtimes/:name/invocations/*path
         invoke_url = f"{AGENTCUBE_ROUTER_URL}/v1/namespaces/{req.namespace}/agent-runtimes/{req.agent_name}/invocations/runcmd"
         logger.info("Invoking agent at %s with prompt: %s", invoke_url, req.prompt[:100])
 
-        # Check for session_id in header (for session reuse)
-        session_id = request.headers.get("x-agentcube-session-id")
         headers = {"Content-Type": "application/json"}
-        if session_id:
-            headers["x-agentcube-session-id"] = session_id
-            logger.info(f"Reusing session: {session_id}")
+        
+        # Look up agentcube_session_id from the playground session
+        agentcube_session_id = None
+        session = sessions.get(req.session_id) if req.session_id else None
+        if session and not session.is_agentcube_session_expired():
+            agentcube_session_id = session.agentcube_session_id
+            headers["x-agentcube-session-id"] = agentcube_session_id
+            logger.info(f"Reusing agentcube session: {agentcube_session_id}")
+        elif session and session.agentcube_session_id:
+            logger.info(f"Agentcube session {session.agentcube_session_id} expired, will create new one")
+        else:
+            logger.info("No agentcube session found, will create new one")
 
-        async with httpx.AsyncClient(timeout=120.0) as client:
-            resp = await client.post(
+        # Build request body — pass thread_id so agent reuses the same thread
+        payload_data: dict = {"prompt": req.prompt}
+        thread_id = req.thread_id or (session.thread_id if session else None)
+        if not thread_id:
+            from datetime import datetime
+            thread_id = f"thread_{datetime.now().strftime('%Y%m%d%H%M%S')}_{uuid.uuid4().hex[:8]}"
+            logger.info(f"Generated new thread_id: {thread_id}")
+        else:
+            logger.info(f"Reusing thread_id: {thread_id}")
+
+        # Generate a turn_id for this invocation
+        turn_id = req.turn_id or f"turn_{uuid.uuid4().hex[:8]}"
+        payload_data["thread_id"] = thread_id
+        payload_data["turn_id"] = turn_id
+        
+        body: dict = {"payload": payload_data}
+
+        async with httpx.AsyncClient(timeout=120.0) as http_client:
+            resp = await http_client.post(
                 invoke_url,
-                json={"payload": {"prompt": req.prompt}},
+                json=body,
                 headers=headers,
             )
             resp.raise_for_status()
             result = resp.json()
+            
+            # Extract agentcube session_id from response header
+            new_agentcube_session_id = resp.headers.get("x-agentcube-session-id")
 
-        thread_id = result.get("thread_id", "")
-        if not thread_id:
+        returned_thread_id = result.get("thread_id", "")
+        if not returned_thread_id:
             raise HTTPException(status_code=400, detail="Agent did not return a thread_id. It likely doesn't support Eventide telemetry.")
 
+        # Update session tracking
+        if session:
+            session.thread_id = returned_thread_id
+            session.last_invoke_at = time.time()
+            if new_agentcube_session_id:
+                session.agentcube_session_id = new_agentcube_session_id
+                logger.info(f"Stored agentcube session_id: {new_agentcube_session_id}")
+
         return InvokeResponse(
-            thread_id=thread_id,
+            thread_id=returned_thread_id,
+            turn_id=turn_id,
+            agentcube_session_id=new_agentcube_session_id or agentcube_session_id,
             output=result.get("output"),
             agent=result.get("agent"),
             timestamp=result.get("timestamp"),
@@ -316,6 +352,8 @@ async def list_sessions():
             title=s.title,
             created_at=s.created_at,
             session_timeout_ms=s.session_timeout_ms,
+            agentcube_session_id=s.agentcube_session_id,
+            last_invoke_at=s.last_invoke_at,
             message_count=len(s.messages),
         ))
     return SessionListResponse(sessions=summaries)

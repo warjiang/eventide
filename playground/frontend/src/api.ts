@@ -11,15 +11,25 @@ export interface Agent {
 
 export interface SessionData {
     session_id: string;
-    thread_id: string;
+    thread_id: string | null;
     agent_name: string;
     namespace: string;
     title: string;
     messages?: any[];
     message_count?: number;
-    // Session expiration tracking
-    session_created_at?: number;
-    session_expires_at?: number;
+    // agentcube runtime tracking (managed by backend)
+    agentcube_session_id?: string | null;
+    last_invoke_at?: number | null;
+    session_timeout_ms?: number;
+}
+
+export interface InvokeResult {
+    thread_id: string;
+    turn_id?: string;
+    agentcube_session_id?: string | null;
+    output?: string;
+    agent?: string;
+    timestamp?: string;
 }
 
 export async function fetchAgents() {
@@ -32,19 +42,19 @@ export async function invokeAgent(
     agentName: string, 
     namespace: string, 
     prompt: string,
-    sessionId?: string
-) {
-    const headers: Record<string, string> = { 'Content-Type': 'application/json' };
-    
-    // If session_id is provided and not expired, use it for reuse
-    if (sessionId) {
-        headers['x-agentcube-session-id'] = sessionId;
-    }
-    
+    sessionId?: string,      // playground session_id — backend uses it to look up agentcube session
+    threadId?: string | null  // reuse thread_id for multi-turn conversations
+): Promise<InvokeResult> {
     const resp = await fetch(`${BASE}/api/invoke`, {
         method: 'POST',
-        headers,
-        body: JSON.stringify({ agent_name: agentName, namespace, prompt }),
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            agent_name: agentName,
+            namespace,
+            prompt,
+            session_id: sessionId || null,
+            thread_id: threadId || null,
+        }),
     });
     if (!resp.ok) {
         const text = await resp.text();
@@ -120,27 +130,4 @@ export async function deleteSession(sessionId: string) {
     });
     if (!resp.ok) throw new Error(`Failed to delete session: ${resp.status}`);
     return resp.json();
-}
-
-// ── Thread Session Mapping ───────────────────────────────────────────────
-
-/**
- * Check if a session is still valid (not expired)
- * Default expiration is 10 minutes (600000 ms)
- */
-export function isSessionValid(session: SessionData | null, expirationMs: number = 600000): boolean {
-    if (!session || !session.session_created_at) return false;
-    const now = Date.now();
-    const expiresAt = session.session_expires_at || (session.session_created_at + expirationMs);
-    return now < expiresAt;
-}
-
-/**
- * Get the session_id to use for invocation
- * Returns undefined if session is expired or not found
- */
-export function getValidSessionId(session: SessionData | null): string | undefined {
-    if (!session) return undefined;
-    if (!isSessionValid(session)) return undefined;
-    return session.session_id;
 }

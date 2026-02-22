@@ -13,7 +13,6 @@ import {
     createSession,
     addMessage,
     deleteSession,
-    getValidSessionId,
 } from './api'
 
 import { Agent, SessionData } from './api'
@@ -122,11 +121,11 @@ export default function App() {
 
             // Get current session data
             const currentSession = sessions.find(s => s.session_id === activeSessionId)
-            
+
             // Create session if none active
             let sessionId = activeSessionId
             let threadId = currentSession?.thread_id
-            
+
             if (!sessionId) {
                 try {
                     const session = await createSession(
@@ -157,24 +156,28 @@ export default function App() {
                 }
             }
 
-            // Invoke agent with session_id reuse logic
+            // Invoke agent — backend handles agentcube session reuse and timeout
             setIsStreaming(true)
             setStreamingEvents([])
 
             try {
-                // Get valid session_id for reuse (checks expiration)
-                const validSessionId = getValidSessionId(currentSession || null)
-                
                 const result = await invokeAgent(
                     selectedAgent.name,
                     selectedAgent.namespace,
                     prompt,
-                    validSessionId  // Pass session_id for reuse if valid
+                    sessionId || undefined,   // playground session_id
+                    threadId                  // reuse thread_id for multi-turn
                 )
-                
-                // Update thread_id if returned (new session created)
+
+                // Update thread_id from response (first turn sets it, subsequent turns reuse it)
                 if (result.thread_id) {
                     threadId = result.thread_id
+                    // Update session list so next turn picks up the thread_id
+                    setSessions(prev => prev.map(s =>
+                        s.session_id === sessionId
+                            ? { ...s, thread_id: result.thread_id, agentcube_session_id: result.agentcube_session_id }
+                            : s
+                    ))
                 }
 
                 // Ensure threadId is defined before streaming
@@ -265,9 +268,9 @@ export default function App() {
                 <AgentSelector selectedAgent={selectedAgent} onSelect={setSelectedAgent} />
 
                 <SessionList
-                    sessions={sessions.filter(s => 
-                        selectedAgent && 
-                        s.agent_name === selectedAgent.name && 
+                    sessions={sessions.filter(s =>
+                        selectedAgent &&
+                        s.agent_name === selectedAgent.name &&
                         s.namespace === selectedAgent.namespace
                     )}
                     activeSessionId={activeSessionId}
