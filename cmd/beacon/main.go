@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"os/signal"
 	"strconv"
+	"strings"
 	"syscall"
 	"time"
 
@@ -241,6 +242,30 @@ func main() {
 			return
 		}
 
+		var activeTurns map[string]struct{}
+		if turnIDsParam := req.URL.Query()["turn_id"]; len(turnIDsParam) > 0 {
+			for _, v := range turnIDsParam {
+				for _, part := range strings.Split(v, ",") {
+					if part = strings.TrimSpace(part); part != "" {
+						if activeTurns == nil {
+							activeTurns = make(map[string]struct{})
+						}
+						activeTurns[part] = struct{}{}
+					}
+				}
+			}
+		} else if turnIDsStr := req.URL.Query().Get("turn_ids"); turnIDsStr != "" {
+			for _, part := range strings.Split(turnIDsStr, ",") {
+				if part = strings.TrimSpace(part); part != "" {
+					if activeTurns == nil {
+						activeTurns = make(map[string]struct{})
+					}
+					activeTurns[part] = struct{}{}
+				}
+			}
+		}
+		filterByTurnID := activeTurns != nil
+
 		w.Header().Set("content-type", "text/event-stream")
 		w.Header().Set("cache-control", "no-cache")
 		w.Header().Set("connection", "keep-alive")
@@ -286,6 +311,13 @@ func main() {
 				if !ok {
 					continue
 				}
+
+				if filterByTurnID {
+					if _, requested := activeTurns[evt.TurnID]; !requested {
+						continue
+					}
+				}
+
 				b, err := json.Marshal(evt)
 				if err != nil {
 					continue
@@ -296,11 +328,22 @@ func main() {
 				flusher.Flush()
 
 				if evt.Type == eventide.TypeTurnCompleted || evt.Type == eventide.TypeTurnFailed || evt.Type == eventide.TypeTurnCancelled {
-					if err := writeSSE(w, evt.Seq, "done", []byte("[DONE]")); err != nil {
-						return
+					if filterByTurnID {
+						delete(activeTurns, evt.TurnID)
+						if len(activeTurns) == 0 {
+							if err := writeSSE(w, evt.Seq, "done", []byte("[DONE]")); err != nil {
+								return
+							}
+							flusher.Flush()
+							return // Terminate the connection after all requested turns are done
+						}
+					} else {
+						if err := writeSSE(w, evt.Seq, "done", []byte("[DONE]")); err != nil {
+							return
+						}
+						flusher.Flush()
+						return // Terminate the connection after the turn is done
 					}
-					flusher.Flush()
-					return // Terminate the connection after the turn is done
 				}
 			}
 		}
@@ -404,24 +447,24 @@ func (e *requestError) Error() string {
 }
 
 func writeSSE(w http.ResponseWriter, id int64, event string, data []byte) error {
-	// if _, err := w.Write([]byte("id: ")); err != nil {
-	// 	return err
-	// }
-	// if _, err := w.Write([]byte(strconv.FormatInt(id, 10))); err != nil {
-	// 	return err
-	// }
-	// if _, err := w.Write([]byte("\n")); err != nil {
-	// 	return err
-	// }
-	// if _, err := w.Write([]byte("event: ")); err != nil {
-	// 	return err
-	// }
-	// if _, err := w.Write([]byte(event)); err != nil {
-	// 	return err
-	// }
-	// if _, err := w.Write([]byte("\n")); err != nil {
-	// 	return err
-	// }
+	//if _, err := w.Write([]byte("id: ")); err != nil {
+	//	return err
+	//}
+	//if _, err := w.Write([]byte(strconv.FormatInt(id, 10))); err != nil {
+	//	return err
+	//}
+	//if _, err := w.Write([]byte("\n")); err != nil {
+	//	return err
+	//}
+	//if _, err := w.Write([]byte("event: ")); err != nil {
+	//	return err
+	//}
+	//if _, err := w.Write([]byte(event)); err != nil {
+	//	return err
+	//}
+	//if _, err := w.Write([]byte("\n")); err != nil {
+	//	return err
+	//}
 	if _, err := w.Write([]byte("data: ")); err != nil {
 		return err
 	}
