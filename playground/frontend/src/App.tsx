@@ -3,6 +3,8 @@ import AgentSelector from './components/AgentSelector'
 import SessionList from './components/SessionList'
 import ChatView from './components/ChatView'
 import ChatInput from './components/ChatInput'
+import ThemeToggle from './components/ThemeToggle'
+import { useTheme } from './hooks/useTheme'
 import { Zap, Bot, AlertTriangle } from 'lucide-react'
 import {
     invokeAgent,
@@ -16,6 +18,7 @@ import {
 import { Agent, SessionData } from './api'
 
 export default function App() {
+    const { theme, setTheme, isDark } = useTheme()
     const [selectedAgent, setSelectedAgent] = useState<Agent | null>(null)
     const [sessions, setSessions] = useState<SessionData[]>([])
     const [activeSessionId, setActiveSessionId] = useState<string | null>(null)
@@ -218,12 +221,15 @@ export default function App() {
     return (
         <div className="flex h-screen w-screen bg-background text-foreground overflow-hidden">
             {/* Sidebar */}
-            <aside className="w-[300px] min-w-[300px] bg-muted/20 border-r border-border flex flex-col hidden sm:flex">
-                <div className="p-5 border-b border-border">
-                    <h1 className="text-base font-semibold bg-gradient-to-br from-primary to-purple-400 bg-clip-text text-transparent tracking-tight flex items-center gap-1.5">
-                        <Zap className="w-4 h-4 text-primary" /> Agent Playground
-                    </h1>
-                    <p className="text-[11px] text-muted-foreground mt-1">
+            <aside className="w-[320px] min-w-[320px] bg-muted/20 border-r border-border flex flex-col hidden sm:flex">
+                <div className="px-8 py-6 border-b border-border">
+                    <div className="flex items-center justify-between">
+                        <h1 className="text-base font-semibold bg-gradient-to-br from-primary to-purple-400 bg-clip-text text-transparent tracking-tight flex items-center gap-2">
+                            <Zap className="w-4 h-4 text-primary" /> Agent Playground
+                        </h1>
+                        <ThemeToggle theme={theme} setTheme={setTheme} isDark={isDark} />
+                    </div>
+                    <p className="text-[11px] text-muted-foreground mt-1.5">
                         Eventide — Real-time Agent Traces
                     </p>
                 </div>
@@ -242,11 +248,11 @@ export default function App() {
             {/* Main area */}
             <main className="flex-1 flex flex-col overflow-hidden bg-background">
                 {!selectedAgent ? (
-                    <div className="flex-1 flex flex-col items-center justify-center gap-4 text-muted-foreground p-8">
-                        <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-primary/10 to-transparent border border-border flex items-center justify-center text-primary shadow-sm mb-4">
-                            <Bot className="w-8 h-8" />
+                    <div className="flex-1 flex flex-col items-center justify-center gap-5 text-muted-foreground p-10">
+                        <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-primary/10 to-transparent border border-border flex items-center justify-center text-primary shadow-sm mb-2">
+                            <Bot className="w-10 h-10" />
                         </div>
-                        <h2 className="text-lg font-semibold text-foreground">Select an Agent</h2>
+                        <h2 className="text-xl font-semibold text-foreground">Select an Agent</h2>
                         <p className="text-sm max-w-sm text-center content-center leading-relaxed">
                             Choose an agent from the sidebar to start a conversation.
                         </p>
@@ -265,15 +271,19 @@ export default function App() {
                             </div>
                         )}
 
-                        <ChatInput
-                            onSend={handleSend}
-                            disabled={isStreaming || !selectedAgent}
-                            placeholder={
-                                isStreaming
-                                    ? 'Agent is working...'
-                                    : `Send a prompt to ${selectedAgent?.name || 'agent'}...`
-                            }
-                        />
+                        <div className="flex justify-center px-4 py-4">
+                            <div className="w-full max-w-3xl">
+                                <ChatInput
+                                    onSend={handleSend}
+                                    disabled={isStreaming || !selectedAgent}
+                                    placeholder={
+                                        isStreaming
+                                            ? 'Agent is working...'
+                                            : `Send a prompt to ${selectedAgent?.name || 'agent'}...`
+                                    }
+                                />
+                            </div>
+                        </div>
                     </>
                 )}
             </main>

@@ -45,9 +45,9 @@ export default function AgentSelector({ selectedAgent, onSelect }: AgentSelector
 
     if (loading) {
         return (
-            <div className="p-4 border-b border-border">
+            <div className="px-8 py-6 border-b border-border">
                 <label className="text-xs font-semibold text-muted-foreground uppercase tracking-widest mb-2 block">Agent</label>
-                <div className="text-sm text-muted-foreground text-center">
+                <div className="text-sm text-muted-foreground text-center py-2">
                     Loading agents...
                 </div>
             </div>
@@ -56,14 +56,14 @@ export default function AgentSelector({ selectedAgent, onSelect }: AgentSelector
 
     if (error) {
         return (
-            <div className="p-4 border-b border-border">
+            <div className="px-8 py-6 border-b border-border">
                 <label className="text-xs font-semibold text-muted-foreground uppercase tracking-widest mb-2 block">Agent</label>
                 <div className="text-destructive text-sm text-center flex flex-col items-center gap-2">
                     <span className="flex items-center justify-center gap-1.5"><AlertTriangle className="w-4 h-4" /> {error}</span>
-                    <div className="mt-2">
+                    <div className="mt-3">
                         <button
                             onClick={loadAgents}
-                            className="px-3 py-1 bg-secondary hover:bg-secondary/80 text-secondary-foreground rounded-md text-xs transition-colors"
+                            className="px-4 py-1.5 bg-secondary hover:bg-secondary/80 text-secondary-foreground rounded-md text-xs transition-colors cursor-pointer"
                         >
                             Retry
                         </button>
@@ -76,7 +76,7 @@ export default function AgentSelector({ selectedAgent, onSelect }: AgentSelector
     const selectedKey = selectedAgent ? `${selectedAgent.namespace}/${selectedAgent.name}` : ''
 
     return (
-        <div className="p-6 border-b border-border">
+        <div className="px-8 py-6 border-b border-border">
             <label className="text-xs font-semibold text-muted-foreground uppercase tracking-widest mb-3 block">Agent</label>
 
             <Select

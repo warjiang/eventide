@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from 'react'
 import { Button } from "@/components/ui/button"
+import { Send } from 'lucide-react'
 
 interface ChatInputProps {
     onSend: (text: string) => void;
@@ -32,35 +33,30 @@ export default function ChatInput({ onSend, disabled, placeholder }: ChatInputPr
     }
 
     return (
-        <div className="border-t border-border p-4 bg-background">
-            <div className="max-w-4xl mx-auto px-4 md:px-6 lg:px-8 flex gap-3 items-end">
-                <textarea
-                    ref={inputRef}
-                    className="flex-1 min-h-[44px] max-h-[120px] p-3 rounded-xl border border-input bg-background text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 resize-none transition-shadow"
-                    placeholder={placeholder || 'Type your prompt...'}
-                    value={text}
-                    onChange={(e) => setText(e.target.value)}
-                    onKeyDown={handleKeyDown}
-                    disabled={disabled}
-                    rows={1}
-                />
-                <Button
-                    onClick={handleSend}
-                    disabled={disabled || !text.trim()}
-                    size="icon"
-                    className="h-[44px] w-[44px] shrink-0 rounded-xl"
-                >
-                    <svg viewBox="0 0 24 24" fill="none" className="w-5 h-5">
-                        <path
-                            d="M22 2L11 13M22 2L15 22L11 13M22 2L2 9L11 13"
-                            stroke="currentColor"
-                            strokeWidth="2"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                        />
-                    </svg>
-                    <span className="sr-only">Send message</span>
-                </Button>
+        <div>
+            <div className="relative group">
+                <div className="absolute -inset-0.5 bg-gradient-to-r from-primary/20 to-purple-500/20 rounded-2xl blur opacity-0 group-focus-within:opacity-100 transition-opacity duration-300"></div>
+                <div className="relative flex items-end gap-3 bg-background/80 backdrop-blur-xl border border-border/60 rounded-2xl shadow-lg px-5 py-4 focus-within:border-primary/40 focus-within:shadow-xl transition-all duration-300">
+                    <textarea
+                        ref={inputRef}
+                        className="flex-1 min-h-[28px] max-h-[200px] bg-transparent text-sm text-foreground placeholder:text-muted-foreground/60 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50 resize-none leading-relaxed py-1"
+                        placeholder={placeholder || 'Message the agent...'}
+                        value={text}
+                        onChange={(e) => setText(e.target.value)}
+                        onKeyDown={handleKeyDown}
+                        disabled={disabled}
+                        rows={1}
+                    />
+                    <Button
+                        onClick={handleSend}
+                        disabled={disabled || !text.trim()}
+                        size="icon"
+                        className="h-9 w-9 shrink-0 rounded-xl cursor-pointer bg-primary hover:bg-primary/90 text-primary-foreground disabled:opacity-30 disabled:cursor-not-allowed transition-all duration-200 shadow-md hover:shadow-lg hover:scale-105 active:scale-95"
+                    >
+                        <Send className="w-4 h-4" />
+                        <span className="sr-only">Send message</span>
+                    </Button>
+                </div>
             </div>
         </div>
     )

@@ -21,16 +21,16 @@ export default function SessionList({
 }: SessionListProps) {
     return (
         <div className="flex flex-col flex-1 overflow-hidden">
-            <div className="flex items-center justify-between py-6 px-5 border-b border-border/50">
+            <div className="flex items-center justify-between py-6 px-8 border-b border-border/50">
                 <span className="text-xs font-semibold text-muted-foreground uppercase tracking-widest">Sessions</span>
-                <Button onClick={onCreate} size="sm" className="h-8 gap-1">
+                <Button onClick={onCreate} size="sm" className="h-8 gap-1.5 cursor-pointer">
                     <PlusIcon className="w-3.5 h-3.5" />
                     New
                 </Button>
             </div>
 
             <ScrollArea className="flex-1">
-                <div className="px-3 pt-4 pb-6 flex flex-col gap-2">
+                <div className="px-4 pt-4 pb-8 flex flex-col gap-2">
                     {sessions.length === 0 ? (
                         <div className="py-10 px-4 text-center text-sm text-muted-foreground">
                             No conversations yet.
@@ -47,9 +47,9 @@ export default function SessionList({
                                     }`}
                                 onClick={() => onSelect(s.session_id)}
                             >
-                                <div className="flex-1 min-w-0 mr-2">
+                                <div className="flex-1 min-w-0 mr-3">
                                     <div className="text-sm font-medium truncate">{s.title}</div>
-                                    <div className="text-xs text-muted-foreground mt-0.5 flex items-center gap-1.5 truncate">
+                                    <div className="text-xs text-muted-foreground mt-1 flex items-center gap-1.5 truncate">
                                         <span>{s.agent_name}</span>
                                         <span>·</span>
                                         <span>{s.message_count} msgs</span>

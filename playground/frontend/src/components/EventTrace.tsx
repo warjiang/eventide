@@ -33,7 +33,7 @@ export default function EventTrace({ events, isStreaming }: EventTraceProps) {
     }
 
     return (
-        <div className="relative pl-6 before:absolute before:inset-y-0 before:left-[11px] before:w-0.5 before:bg-border/60 space-y-3">
+        <div className="relative pl-6 before:absolute before:inset-y-0 before:left-[11px] before:w-0.5 before:bg-border/60 space-y-4">
             {rendered.map((item, i) => {
                 if (item.type === 'tool_pair') {
                     const pair = toolPairs[item.key]
@@ -154,19 +154,19 @@ function ToolCallCard({ started, completed }: { started: any, completed: any }) 
             <Badge variant="outline" className="text-[10px] font-mono bg-cyan-500/10 text-cyan-500 hover:bg-cyan-500/20 mb-1.5">
                 TOOL CALL
             </Badge>
-            <div className="mt-1 p-3 bg-card border border-border rounded-lg shadow-sm">
+            <div className="mt-1.5 p-4 bg-card border border-border rounded-lg shadow-sm">
                 <div className="font-semibold text-sm text-cyan-600 dark:text-cyan-400 mb-1 flex items-center gap-2">
                     <span className="flex items-center gap-1.5"><PenTool className="w-3.5 h-3.5" /> {toolName}</span>
                     {completed && <span className="text-emerald-500 text-xs flex items-center gap-1"><CheckCircle2 className="w-3 h-3" /> Done</span>}
                     {!completed && <span className="text-muted-foreground text-xs animate-pulse flex items-center gap-1"><Clock className="w-3 h-3" /> Executing</span>}
                 </div>
                 {args && (
-                    <div className="font-mono text-[11px] text-muted-foreground bg-muted/50 p-2 rounded max-h-32 overflow-y-auto">
+                    <div className="font-mono text-[11px] text-muted-foreground bg-muted/50 p-2.5 rounded max-h-32 overflow-y-auto">
                         {JSON.stringify(args, null, 2)}
                     </div>
                 )}
                 {result && (
-                    <div className="mt-2 p-2 bg-emerald-500/10 border border-emerald-500/20 rounded font-mono text-[11px] text-emerald-600 dark:text-emerald-400 overflow-x-auto">
+                    <div className="mt-2.5 p-2.5 bg-emerald-500/10 border border-emerald-500/20 rounded font-mono text-[11px] text-emerald-600 dark:text-emerald-400 overflow-x-auto">
                         → {String(result)}
                     </div>
                 )}

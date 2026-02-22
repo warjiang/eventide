@@ -18,17 +18,17 @@ export default function ChatView({ messages, streamingEvents, isStreaming }: Cha
 
     if (messages.length === 0 && !isStreaming) {
         return (
-            <ScrollArea className="flex-1">
-                <div className="h-full flex flex-col items-center justify-center p-8 text-muted-foreground">
-                    <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-primary/20 to-transparent border border-border flex items-center justify-center text-primary mb-4 shadow-sm">
-                        <MessageSquare className="w-8 h-8" />
+            <div className="flex-1 flex items-center justify-center p-10 text-muted-foreground">
+                <div className="flex flex-col items-center justify-center">
+                    <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-primary/20 to-transparent border border-border flex items-center justify-center text-primary mb-5 shadow-sm">
+                        <MessageSquare className="w-9 h-9" />
                     </div>
-                    <h2 className="text-lg font-semibold text-foreground mb-2">Start a Conversation</h2>
+                    <h2 className="text-xl font-semibold text-foreground mb-3">Start a Conversation</h2>
                     <p className="text-sm text-center max-w-xs leading-relaxed">
                         Send a message to the selected agent and watch its execution trace in real-time.
                     </p>
                 </div>
-            </ScrollArea>
+            </div>
         )
     }
 
@@ -47,10 +47,10 @@ export default function ChatView({ messages, streamingEvents, isStreaming }: Cha
 
     return (
         <ScrollArea className="flex-1">
-            <div className="max-w-4xl mx-auto p-4 md:p-6 lg:p-8 space-y-8">
+            <div className="max-w-4xl mx-auto px-4 py-6 md:px-6 md:py-8 lg:px-8 space-y-6">
                 {messages.map((msg, i) => (
                     <div key={i} className="animate-in fade-in slide-in-from-bottom-2 duration-300">
-                        <div className={`text-xs font-semibold uppercase tracking-wider mb-2 flex items-center gap-1.5 ${msg.role === 'user' ? 'text-primary' : 'text-emerald-500'
+                        <div className={`text-xs font-semibold uppercase tracking-wider mb-3 flex items-center gap-2 ${msg.role === 'user' ? 'text-primary' : 'text-emerald-500'
                             }`}>
                             {msg.role === 'user' ? (
                                 <>
@@ -74,7 +74,7 @@ export default function ChatView({ messages, streamingEvents, isStreaming }: Cha
                         </div>
 
                         {msg.events?.length > 0 && (
-                            <div className="mt-3 pl-4 border-l-2 border-border/60">
+                            <div className="mt-4 pl-5 border-l-2 border-border/60">
                                 <EventTrace events={msg.events} isStreaming={false} />
                             </div>
                         )}
