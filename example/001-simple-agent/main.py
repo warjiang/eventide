@@ -191,8 +191,9 @@ class SimpleAgentHandler(BaseHTTPRequestHandler):
             post_data = self.rfile.read(content_length)
             data = json.loads(post_data.decode('utf-8'))
             logger.info(f"Received data: {data}")
-            # Handle different types of prompts
-            prompt = data.get('prompt', '')
+            # Handle different types of prompts (support both flat and nested 'payload' schemas)
+            payload = data.get('payload', {})
+            prompt = data.get('prompt') or payload.get('prompt', '')
             # 如果 data 中有 thread_id 则复用，否则创建新的
             thread_id = data.get('thread_id') or f"thread_{datetime.now().strftime('%Y%m%d%H%M%S')}_{uuid.uuid4().hex[:8]}"
             response_data = {
