@@ -45,29 +45,25 @@ export default function AgentSelector({ selectedAgent, onSelect }: AgentSelector
 
     if (loading) {
         return (
-            <div className="px-8 py-6 border-b border-border">
-                <label className="text-xs font-semibold text-muted-foreground uppercase tracking-widest mb-2 block">Agent</label>
-                <div className="text-sm text-muted-foreground text-center py-2">
-                    Loading agents...
-                </div>
+            <div className="px-8 py-6 border-b border-border/50">
+                <label className="text-xs font-semibold text-muted-foreground uppercase tracking-widest mb-3 block">Agent</label>
+                <div className="h-10 rounded-lg bg-surface animate-pulse" />
             </div>
         )
     }
 
     if (error) {
         return (
-            <div className="px-8 py-6 border-b border-border">
-                <label className="text-xs font-semibold text-muted-foreground uppercase tracking-widest mb-2 block">Agent</label>
-                <div className="text-destructive text-sm text-center flex flex-col items-center gap-2">
-                    <span className="flex items-center justify-center gap-1.5"><AlertTriangle className="w-4 h-4" /> {error}</span>
-                    <div className="mt-3">
-                        <button
-                            onClick={loadAgents}
-                            className="px-4 py-1.5 bg-secondary hover:bg-secondary/80 text-secondary-foreground rounded-md text-xs transition-colors cursor-pointer"
-                        >
-                            Retry
-                        </button>
-                    </div>
+            <div className="px-8 py-6 border-b border-border/50">
+                <label className="text-xs font-semibold text-muted-foreground uppercase tracking-widest mb-3 block">Agent</label>
+                <div className="text-sm text-destructive flex flex-col items-center gap-3 p-4 rounded-lg bg-destructive/5 border border-destructive/20">
+                    <span className="flex items-center gap-2"><AlertTriangle className="w-4 h-4" /> {error}</span>
+                    <button
+                        onClick={loadAgents}
+                        className="px-4 py-1.5 bg-secondary hover:bg-secondary/80 text-secondary-foreground rounded-lg text-xs transition-all duration-200 cursor-pointer hover:scale-105 active:scale-95"
+                    >
+                        Retry
+                    </button>
                 </div>
             </div>
         )
@@ -76,7 +72,7 @@ export default function AgentSelector({ selectedAgent, onSelect }: AgentSelector
     const selectedKey = selectedAgent ? `${selectedAgent.namespace}/${selectedAgent.name}` : ''
 
     return (
-        <div className="px-8 py-6 border-b border-border">
+        <div className="px-8 py-6 border-b border-border/50">
             <label className="text-xs font-semibold text-muted-foreground uppercase tracking-widest mb-3 block">Agent</label>
 
             <Select
@@ -87,16 +83,21 @@ export default function AgentSelector({ selectedAgent, onSelect }: AgentSelector
                 }}
                 disabled={agents.length === 0}
             >
-                <SelectTrigger className="w-full">
+                <SelectTrigger className="w-full h-10 rounded-lg border-border/60 focus:ring-2 focus:ring-primary/30 transition-all duration-200 cursor-pointer">
                     <SelectValue placeholder="Select an agent" />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="rounded-xl border-border/60 shadow-xl">
                     {agents.length === 0 ? (
                         <SelectItem value="none" disabled>No agents available</SelectItem>
                     ) : (
                         agents.map((a) => (
-                            <SelectItem key={`${a.namespace}/${a.name}`} value={`${a.namespace}/${a.name}`}>
-                                {a.name} <span className="text-muted-foreground ml-1">({a.namespace})</span>
+                            <SelectItem 
+                                key={`${a.namespace}/${a.name}`} 
+                                value={`${a.namespace}/${a.name}`}
+                                className="cursor-pointer"
+                            >
+                                <span className="font-medium">{a.name}</span>
+                                <span className="text-muted-foreground ml-2">({a.namespace})</span>
                             </SelectItem>
                         ))
                     )}
@@ -104,10 +105,10 @@ export default function AgentSelector({ selectedAgent, onSelect }: AgentSelector
             </Select>
 
             {selectedAgent && (
-                <div className="mt-2">
-                    <Badge variant="outline" className="gap-1.5 font-normal text-xs text-muted-foreground">
-                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-                        {selectedAgent.namespace}/{selectedAgent.name}
+                <div className="mt-3">
+                    <Badge variant="outline" className="gap-2 font-normal text-xs text-muted-foreground border-border/40 bg-surface/50">
+                        <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                        <span className="font-mono text-[11px]">{selectedAgent.namespace}/{selectedAgent.name}</span>
                     </Badge>
                 </div>
             )}

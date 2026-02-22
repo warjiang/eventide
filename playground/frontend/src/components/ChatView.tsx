@@ -1,7 +1,7 @@
 import { useEffect, useRef } from 'react'
 import EventTrace from './EventTrace'
 import { ScrollArea } from "@/components/ui/scroll-area"
-import { MessageSquare } from 'lucide-react'
+import { MessageSquare, User, Bot } from 'lucide-react'
 
 interface ChatViewProps {
     messages: any[];
@@ -20,11 +20,11 @@ export default function ChatView({ messages, streamingEvents, isStreaming }: Cha
         return (
             <div className="flex-1 flex items-center justify-center p-10 text-muted-foreground">
                 <div className="flex flex-col items-center justify-center">
-                    <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-primary/20 to-transparent border border-border flex items-center justify-center text-primary mb-5 shadow-sm">
-                        <MessageSquare className="w-9 h-9" />
+                    <div className="w-24 h-24 rounded-3xl bg-gradient-to-br from-primary/20 via-primary/10 to-transparent border border-border/50 flex items-center justify-center text-primary mb-6 shadow-lg shadow-primary/5">
+                        <MessageSquare className="w-10 h-10" />
                     </div>
                     <h2 className="text-xl font-semibold text-foreground mb-3">Start a Conversation</h2>
-                    <p className="text-sm text-center max-w-xs leading-relaxed">
+                    <p className="text-sm text-center max-w-xs leading-relaxed text-muted-foreground">
                         Send a message to the selected agent and watch its execution trace in real-time.
                     </p>
                 </div>
@@ -47,29 +47,26 @@ export default function ChatView({ messages, streamingEvents, isStreaming }: Cha
 
     return (
         <ScrollArea className="flex-1">
-            <div className="max-w-4xl mx-auto px-4 py-6 md:px-6 md:py-8 lg:px-8 space-y-6">
+            <div className="max-w-4xl mx-auto px-4 py-6 md:px-6 md:py-8 lg:px-8 space-y-8">
                 {messages.map((msg, i) => (
                     <div key={i} className="animate-in fade-in slide-in-from-bottom-2 duration-300">
                         <div className={`text-xs font-semibold uppercase tracking-wider mb-3 flex items-center gap-2 ${msg.role === 'user' ? 'text-primary' : 'text-emerald-500'
                             }`}>
                             {msg.role === 'user' ? (
                                 <>
-                                    <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor">
-                                        <path d="M8 8a3 3 0 100-6 3 3 0 000 6zM2 14a6 6 0 0112 0H2z" />
-                                    </svg>
+                                    <User className="w-3.5 h-3.5" />
                                     You
                                 </>
                             ) : (
                                 <>
-                                    <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor">
-                                        <path d="M6 1a2 2 0 00-2 2v1H3a2 2 0 00-2 2v6a2 2 0 002 2h10a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a2 2 0 00-2-2H6zm0 2h4v1H6V3zM5 8a1 1 0 110-2 1 1 0 010 2zm6 0a1 1 0 110-2 1 1 0 010 2zM5 10h6v1H5v-1z" />
-                                    </svg>
+                                    <Bot className="w-3.5 h-3.5" />
                                     Agent
                                 </>
                             )}
                         </div>
 
-                        <div className="text-sm leading-relaxed text-foreground whitespace-pre-wrap">
+                        <div className={`text-sm leading-relaxed text-foreground whitespace-pre-wrap rounded-xl p-4 border ${msg.role === 'user' ? 'bg-primary/5 border-primary/20' : 'bg-surface/30 border-border/30'
+                            }`}>
                             {msg.content}
                         </div>
 
@@ -85,20 +82,18 @@ export default function ChatView({ messages, streamingEvents, isStreaming }: Cha
                 {isStreaming && (
                     <div className="animate-in fade-in duration-300">
                         <div className="text-xs font-semibold uppercase tracking-wider mb-2 flex items-center gap-1.5 text-emerald-500">
-                            <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor">
-                                <path d="M6 1a2 2 0 00-2 2v1H3a2 2 0 00-2 2v6a2 2 0 002 2h10a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a2 2 0 00-2-2H6zm0 2h4v1H6V3zM5 8a1 1 0 110-2 1 1 0 010 2zm6 0a1 1 0 110-2 1 1 0 010 2zM5 10h6v1H5v-1z" />
-                            </svg>
+                            <Bot className="w-3.5 h-3.5" />
                             Agent
                         </div>
 
                         {streamingText && (
-                            <div className="text-sm leading-relaxed text-foreground whitespace-pre-wrap">
+                            <div className="text-sm leading-relaxed text-foreground whitespace-pre-wrap bg-surface/30 rounded-xl p-4 border border-border/30">
                                 {streamingText}
                                 <span className="inline-block w-0.5 h-4 bg-primary ml-0.5 align-text-bottom animate-pulse" />
                             </div>
                         )}
 
-                        <div className="mt-3 pl-4 border-l-2 border-border/60">
+                        <div className="mt-4 pl-4 border-l-2 border-border/60">
                             <EventTrace
                                 events={streamingEvents}
                                 isStreaming={!turnCompleted}

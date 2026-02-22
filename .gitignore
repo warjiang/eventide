@@ -16,3 +16,6 @@ charts/**/Chart.lock
 charts/eventide/values-onpremise.yaml
 charts/install.yaml
 *.pyc
+node_modules
+.trae
+.agent

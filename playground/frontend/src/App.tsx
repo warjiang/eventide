@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef } from 'react'
+import { useState, useCallback, useRef, useEffect } from 'react'
 import AgentSelector from './components/AgentSelector'
 import SessionList from './components/SessionList'
 import ChatView from './components/ChatView'
@@ -38,6 +38,12 @@ export default function App() {
             console.error('Failed to refresh sessions:', err)
         }
     }, [])
+
+    // ── Initial load ────────────────────────────────────────────────────
+
+    useEffect(() => {
+        refreshSessions()
+    }, [refreshSessions])
 
     const handleCreateSession = useCallback(async () => {
         if (!selectedAgent) return
