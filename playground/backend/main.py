@@ -300,9 +300,13 @@ async def invoke_agent(req: InvokeRequest):
 # ── SSE Proxy ────────────────────────────────────────────────────────────
 
 @app.get("/api/threads/{thread_id}/events/stream")
-async def stream_events(thread_id: str, request: Request):
+async def stream_events(thread_id: str, request: Request, turn_id: Optional[str] = None, turn_ids: Optional[str] = None):
     """Proxy SSE events from the beacon service."""
     beacon_stream_url = f"{BEACON_URL}/threads/{thread_id}/events/stream"
+    query_string = request.url.query
+    if query_string:
+        beacon_stream_url += f"?{query_string}"
+    
     logger.info("Proxying SSE from %s", beacon_stream_url)
 
     async def event_generator() -> AsyncGenerator[dict, None]:

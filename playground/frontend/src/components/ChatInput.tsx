@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react'
 import { Button } from "@/components/ui/button"
-import { Send, Sparkles } from 'lucide-react'
+import { Send, Loader2 } from 'lucide-react'
 
 interface ChatInputProps {
     onSend: (text: string) => void;
@@ -52,7 +52,7 @@ export default function ChatInput({ onSend, disabled, placeholder }: ChatInputPr
                     className="h-8 w-8 shrink-0 rounded-lg cursor-pointer bg-primary hover:bg-primary/90 text-primary-foreground disabled:opacity-30 disabled:cursor-not-allowed transition-all duration-200 hover:scale-105 active:scale-95"
                 >
                     {disabled ? (
-                        <Sparkles className="w-4 h-4 animate-spin" />
+                        <Loader2 className="w-4 h-4 animate-spin" />
                     ) : (
                         <Send className="w-4 h-4" />
                     )}

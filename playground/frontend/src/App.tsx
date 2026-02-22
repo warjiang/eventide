@@ -191,6 +191,7 @@ export default function App() {
                 const collectedEvents: any[] = []
                 const evtSource = streamEvents(
                     threadId,
+                    result.turn_id,
                     // onEvent
                     (event) => {
                         collectedEvents.push(event)

@@ -1,5 +1,6 @@
 import { Badge } from "@/components/ui/badge"
 import { PenTool, CheckCircle2, Clock } from 'lucide-react'
+import MarkdownRenderer from './MarkdownRenderer'
 
 interface EventTraceProps {
     events: any[];
@@ -31,12 +32,11 @@ export default function EventTrace({ events, isStreaming }: EventTraceProps) {
             rendered.push({ type: 'event', evt })
         }
     }
-
     return (
         <div className="relative space-y-2">
             {/* Timeline line */}
             <div className="absolute left-[4px] top-1.5 bottom-1.5 w-[1.5px] bg-border/40" />
-            
+
             {rendered.map((item, i) => {
                 if (item.type === 'tool_pair') {
                     const pair = toolPairs[item.key]
@@ -87,7 +87,9 @@ function EventItem({ evt }: { evt: any }) {
                         <Badge variant="outline" className="text-[9px] font-mono bg-amber-500/10 text-amber-500 hover:bg-amber-500/20 mb-0.5 py-0 h-4">
                             MESSAGE
                         </Badge>
-                        <div className="text-xs whitespace-pre-wrap">{evt.payload?.delta}</div>
+                        <div className="text-xs">
+                            <MarkdownRenderer content={evt.payload?.delta || ''} />
+                        </div>
                     </div>
                 </div>
             )
@@ -113,7 +115,9 @@ function EventItem({ evt }: { evt: any }) {
                             TURN COMPLETED
                         </Badge>
                         {evt.payload?.output && (
-                            <div className="text-[10px] text-muted-foreground">{String(evt.payload.output)}</div>
+                            <div className="text-[10px] text-muted-foreground">
+                                <MarkdownRenderer content={String(evt.payload.output)} />
+                            </div>
                         )}
                     </div>
                 </div>

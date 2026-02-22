@@ -77,7 +77,7 @@ export default function ChatView({ messages, streamingEvents, isStreaming }: Cha
                         </div>
 
                         {msg.events?.length > 0 && (
-                            <div className="mt-3 pl-4 border-l-2 border-border/60">
+                            <div className="mt-3 pl-4">
                                 <EventTrace events={msg.events} isStreaming={false} />
                             </div>
                         )}
@@ -99,7 +99,7 @@ export default function ChatView({ messages, streamingEvents, isStreaming }: Cha
                             </div>
                         )}
 
-                        <div className="mt-3 pl-3 border-l-2 border-border/60">
+                        <div className="mt-3 pl-3">
                             <EventTrace
                                 events={streamingEvents}
                                 isStreaming={!turnCompleted}
