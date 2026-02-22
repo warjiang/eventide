@@ -66,20 +66,28 @@ class Message(BaseModel):
 
 class Session(BaseModel):
     session_id: str
+    thread_id: str | None = None
     agent_name: str
     namespace: str = "default"
     title: str = "New Chat"
     created_at: float = Field(default_factory=time.time)
+    session_timeout_ms: int = 10 * 60 * 1000  # Default 10 minutes
     messages: list[Message] = Field(default_factory=list)
+    
+    def is_expired(self) -> bool:
+        """Check if session has expired based on session_timeout_ms."""
+        return time.time() * 1000 > (self.created_at * 1000 + self.session_timeout_ms)
 
 
 class SessionSummary(BaseModel):
     """Session metadata returned in list (without full messages)."""
     session_id: str
+    thread_id: str | None = None
     agent_name: str
     namespace: str = "default"
     title: str
     created_at: float
+    session_timeout_ms: int = 10 * 60 * 1000
     message_count: int = 0
 
 

@@ -1,5 +1,6 @@
 import { useEffect, useRef } from 'react'
 import EventTrace from './EventTrace'
+import MarkdownRenderer from './MarkdownRenderer'
 import { MessageSquare, User, Bot } from 'lucide-react'
 
 interface ChatViewProps {
@@ -64,9 +65,15 @@ export default function ChatView({ messages, streamingEvents, isStreaming }: Cha
                             )}
                         </div>
 
-                        <div className={`text-sm leading-relaxed text-foreground whitespace-pre-wrap rounded-lg p-3 border ${msg.role === 'user' ? 'bg-primary/5 border-primary/20' : 'bg-surface/30 border-border/30'
+                        <div className={`rounded-lg p-3 border ${msg.role === 'user' ? 'bg-primary/5 border-primary/20' : 'bg-surface/30 border-border/30'
                             }`}>
-                            {msg.content}
+                            {msg.role === 'user' ? (
+                                <div className="text-sm leading-relaxed text-foreground whitespace-pre-wrap">
+                                    {msg.content}
+                                </div>
+                            ) : (
+                                <MarkdownRenderer content={msg.content} />
+                            )}
                         </div>
 
                         {msg.events?.length > 0 && (
@@ -86,9 +93,9 @@ export default function ChatView({ messages, streamingEvents, isStreaming }: Cha
                         </div>
 
                         {streamingText && (
-                            <div className="text-sm leading-relaxed text-foreground whitespace-pre-wrap bg-surface/30 rounded-lg p-3 border border-border/30">
-                                {streamingText}
-                                <span className="inline-block w-0.5 h-3.5 bg-primary ml-0.5 align-text-bottom animate-pulse" />
+                            <div className="bg-surface/30 rounded-lg p-3 border border-border/30">
+                                <MarkdownRenderer content={streamingText} />
+                                <span className="inline-block w-0.5 h-4 bg-primary ml-0.5 align-text-bottom animate-pulse" />
                             </div>
                         )}
 

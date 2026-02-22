@@ -14,9 +14,10 @@ import asyncio
 import json
 import logging
 import os
+import re
 import uuid
 from contextlib import asynccontextmanager
-from typing import AsyncGenerator
+from typing import AsyncGenerator, Optional
 
 import httpx
 from fastapi import FastAPI, HTTPException, Request
@@ -111,6 +112,65 @@ def get_agent_runtime_gvr():
     _gvr_cache = ("agentcube.io", "v1alpha1", "agentruntimes")
     return _gvr_cache
 
+
+def parse_duration(duration_str: str) -> int:
+    """
+    Parse duration string like '15m', '1h', '30s' to milliseconds.
+    Returns milliseconds.
+    """
+    if not duration_str:
+        return 10 * 60 * 1000  # Default 10 minutes
+    
+    pattern = r'^(\d+)([smhd])$'
+    match = re.match(pattern, duration_str.lower())
+    
+    if not match:
+        logger.warning(f"Invalid duration format: {duration_str}, using default 10m")
+        return 10 * 60 * 1000
+    
+    value = int(match.group(1))
+    unit = match.group(2)
+    
+    multipliers = {
+        's': 1000,           # seconds to ms
+        'm': 60 * 1000,      # minutes to ms
+        'h': 60 * 60 * 1000, # hours to ms
+        'd': 24 * 60 * 60 * 1000, # days to ms
+    }
+    
+    return value * multipliers.get(unit, 60 * 1000)
+
+
+async def get_agent_session_timeout(agent_name: str, namespace: str) -> int:
+    """
+    Get sessionTimeout from AgentRuntime CRD.
+    Returns timeout in milliseconds.
+    """
+    try:
+        loop = asyncio.get_running_loop()
+        
+        def fetch_agent():
+            group, version, plural = get_agent_runtime_gvr()
+            custom_api = client.CustomObjectsApi()
+            return custom_api.get_namespaced_custom_object(
+                group=group,
+                version=version,
+                namespace=namespace,
+                plural=plural,
+                name=agent_name
+            )
+        
+        agent_data = await loop.run_in_executor(None, fetch_agent)
+        spec = agent_data.get("spec", {})
+        session_timeout = spec.get("sessionTimeout", "10m")
+        
+        logger.info(f"Agent {agent_name} sessionTimeout: {session_timeout}")
+        return parse_duration(session_timeout)
+        
+    except Exception as e:
+        logger.warning(f"Failed to get sessionTimeout for agent {agent_name}: {e}, using default 10m")
+        return 10 * 60 * 1000  # Default 10 minutes
+
 @app.get("/api/agents", response_model=AgentListResponse)
 async def list_agents():
     """List AgentRuntime resources from the Kubernetes cluster."""
@@ -154,19 +214,29 @@ async def list_agents():
 # ── Invoke ───────────────────────────────────────────────────────────────
 
 @app.post("/api/invoke", response_model=InvokeResponse)
-async def invoke_agent(req: InvokeRequest):
-    """Invoke an agent via the AgentCube router and return the thread_id."""
+async def invoke_agent(req: InvokeRequest, request: Request):
+    """Invoke an agent via the AgentCube router and return the thread_id.
+    
+    Supports session reuse via x-agentcube-session-id header.
+    """
     try:
         # Use the AgentCube HTTP API to invoke the agent
         # The router URL pattern is from agentcube router logs: POST /v1/namespaces/:namespace/agent-runtimes/:name/invocations/*path
         invoke_url = f"{AGENTCUBE_ROUTER_URL}/v1/namespaces/{req.namespace}/agent-runtimes/{req.agent_name}/invocations/runcmd"
         logger.info("Invoking agent at %s with prompt: %s", invoke_url, req.prompt[:100])
 
+        # Check for session_id in header (for session reuse)
+        session_id = request.headers.get("x-agentcube-session-id")
+        headers = {"Content-Type": "application/json"}
+        if session_id:
+            headers["x-agentcube-session-id"] = session_id
+            logger.info(f"Reusing session: {session_id}")
+
         async with httpx.AsyncClient(timeout=120.0) as client:
             resp = await client.post(
                 invoke_url,
                 json={"payload": {"prompt": req.prompt}},
-                headers={"Content-Type": "application/json"},
+                headers=headers,
             )
             resp.raise_for_status()
             result = resp.json()
@@ -240,10 +310,12 @@ async def list_sessions():
     for s in sorted(sessions.values(), key=lambda x: x.created_at, reverse=True):
         summaries.append(SessionSummary(
             session_id=s.session_id,
+            thread_id=s.thread_id,
             agent_name=s.agent_name,
             namespace=s.namespace,
             title=s.title,
             created_at=s.created_at,
+            session_timeout_ms=s.session_timeout_ms,
             message_count=len(s.messages),
         ))
     return SessionListResponse(sessions=summaries)
@@ -253,13 +325,19 @@ async def list_sessions():
 async def create_session(req: CreateSessionRequest):
     """Create a new session."""
     session_id = str(uuid.uuid4())[:8]
+    
+    # Get agent's session timeout from AgentRuntime
+    session_timeout_ms = await get_agent_session_timeout(req.agent_name, req.namespace)
+    
     session = Session(
         session_id=session_id,
         agent_name=req.agent_name,
         namespace=req.namespace,
         title=req.title,
+        session_timeout_ms=session_timeout_ms,
     )
     sessions[session_id] = session
+    logger.info(f"Created session {session_id} with timeout {session_timeout_ms}ms")
     return session
 
 
@@ -279,6 +357,9 @@ async def add_message(session_id: str, message: Message):
     if not session:
         raise HTTPException(status_code=404, detail="Session not found")
     session.messages.append(message)
+    # Update thread_id from message if provided
+    if message.thread_id and not session.thread_id:
+        session.thread_id = message.thread_id
     # Auto-update title from first user message
     if len(session.messages) == 1 and message.role == MessageRole.USER:
         session.title = message.content[:50] + ("..." if len(message.content) > 50 else "")

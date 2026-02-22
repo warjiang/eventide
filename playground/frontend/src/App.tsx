@@ -12,7 +12,8 @@ import {
     fetchSessions,
     createSession,
     addMessage,
-    deleteSession as apiDeleteSession,
+    deleteSession,
+    getValidSessionId,
 } from './api'
 
 import { Agent, SessionData } from './api'
@@ -98,7 +99,7 @@ export default function App() {
     const handleDeleteSession = useCallback(
         async (sessionId: string) => {
             try {
-                await apiDeleteSession(sessionId)
+                await deleteSession(sessionId)
                 if (activeSessionId === sessionId) {
                     setActiveSessionId(null)
                     setMessages([])
@@ -119,8 +120,13 @@ export default function App() {
 
             setError(null)
 
+            // Get current session data
+            const currentSession = sessions.find(s => s.session_id === activeSessionId)
+            
             // Create session if none active
             let sessionId = activeSessionId
+            let threadId = currentSession?.thread_id
+            
             if (!sessionId) {
                 try {
                     const session = await createSession(
@@ -129,6 +135,7 @@ export default function App() {
                         prompt.slice(0, 50) + (prompt.length > 50 ? '...' : '')
                     )
                     sessionId = session.session_id
+                    threadId = session.thread_id
                     setActiveSessionId(sessionId)
                     await refreshSessions()
                 } catch (err: any) {
@@ -150,17 +157,32 @@ export default function App() {
                 }
             }
 
-            // Invoke agent
+            // Invoke agent with session_id reuse logic
             setIsStreaming(true)
             setStreamingEvents([])
 
             try {
+                // Get valid session_id for reuse (checks expiration)
+                const validSessionId = getValidSessionId(currentSession || null)
+                
                 const result = await invokeAgent(
                     selectedAgent.name,
                     selectedAgent.namespace,
-                    prompt
+                    prompt,
+                    validSessionId  // Pass session_id for reuse if valid
                 )
-                const threadId = result.thread_id
+                
+                // Update thread_id if returned (new session created)
+                if (result.thread_id) {
+                    threadId = result.thread_id
+                }
+
+                // Ensure threadId is defined before streaming
+                if (!threadId) {
+                    setIsStreaming(false)
+                    setError('No thread ID returned from agent')
+                    return
+                }
 
                 // Start streaming SSE events
                 const collectedEvents: any[] = []
@@ -219,7 +241,7 @@ export default function App() {
                 setError(err.message)
             }
         },
-        [selectedAgent, isStreaming, activeSessionId, refreshSessions]
+        [selectedAgent, isStreaming, activeSessionId, sessions, refreshSessions]
     )
 
     // ── Render ──────────────────────────────────────────────────────────
@@ -243,11 +265,16 @@ export default function App() {
                 <AgentSelector selectedAgent={selectedAgent} onSelect={setSelectedAgent} />
 
                 <SessionList
-                    sessions={sessions}
+                    sessions={sessions.filter(s => 
+                        selectedAgent && 
+                        s.agent_name === selectedAgent.name && 
+                        s.namespace === selectedAgent.namespace
+                    )}
                     activeSessionId={activeSessionId}
                     onSelect={handleSelectSession}
                     onDelete={handleDeleteSession}
                     onCreate={handleCreateSession}
+                    selectedAgent={selectedAgent}
                 />
             </aside>
 

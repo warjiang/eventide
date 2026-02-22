@@ -1,8 +1,8 @@
 import { Button } from "@/components/ui/button"
 import { ScrollArea } from "@/components/ui/scroll-area"
-import { PlusIcon, TrashIcon, MessageCircle } from 'lucide-react'
+import { PlusIcon, TrashIcon, MessageCircle, Bot } from 'lucide-react'
 
-import { SessionData } from "../api"
+import { SessionData, Agent } from "../api"
 
 interface SessionListProps {
     sessions: SessionData[];
@@ -10,6 +10,7 @@ interface SessionListProps {
     onSelect: (sessionId: string) => void;
     onDelete: (sessionId: string) => void;
     onCreate: () => void;
+    selectedAgent: Agent | null;
 }
 
 export default function SessionList({
@@ -18,6 +19,7 @@ export default function SessionList({
     onSelect,
     onDelete,
     onCreate,
+    selectedAgent,
 }: SessionListProps) {
     return (
         <div className="flex flex-col flex-1 overflow-hidden">
@@ -38,7 +40,13 @@ export default function SessionList({
 
             <ScrollArea className="flex-1">
                 <div className="px-2 pt-2 pb-6 flex flex-col gap-1">
-                    {sessions.length === 0 ? (
+                    {!selectedAgent ? (
+                        <div className="py-8 px-4 text-center text-xs text-muted-foreground">
+                            <Bot className="w-8 h-8 mx-auto mb-2 opacity-30" />
+                            <p>Select an agent first</p>
+                            <p className="mt-0.5 text-[10px]">Choose an agent to view sessions</p>
+                        </div>
+                    ) : sessions.length === 0 ? (
                         <div className="py-8 px-4 text-center text-xs text-muted-foreground">
                             <MessageCircle className="w-8 h-8 mx-auto mb-2 opacity-30" />
                             <p>No conversations yet.</p>
