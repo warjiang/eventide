@@ -39,8 +39,8 @@ export async function fetchAgents() {
 }
 
 export async function invokeAgent(
-    agentName: string, 
-    namespace: string, 
+    agentName: string,
+    namespace: string,
     prompt: string,
     sessionId?: string,      // playground session_id — backend uses it to look up agentcube session
     threadId?: string | null  // reuse thread_id for multi-turn conversations
@@ -65,11 +65,15 @@ export async function invokeAgent(
 
 export function streamEvents(
     threadId: string,
+    turnId: string | undefined,
     onEvent: (event: any) => void,
     onDone: () => void,
     onError: (err: Event) => void
 ) {
-    const evtSource = new EventSource(`${BASE}/api/threads/${threadId}/events/stream`);
+    const url = turnId
+        ? `${BASE}/api/threads/${threadId}/events/stream?turn_id=${turnId}`
+        : `${BASE}/api/threads/${threadId}/events/stream`;
+    const evtSource = new EventSource(url);
     evtSource.onmessage = (e) => {
         if (e.data === '[DONE]') {
             evtSource.close();

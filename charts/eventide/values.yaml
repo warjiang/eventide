@@ -79,6 +79,18 @@ referenceAgent:
     port: 18080
   resources: {}
 
+playground:
+  enabled: true
+  replicaCount: 1
+  image:
+    repository: ghcr.io/warjiang/eventide/playground
+    tag: "latest"
+    pullPolicy: IfNotPresent
+  service:
+    type: ClusterIP
+    port: 18083
+  resources: {}
+
 migrate:
   enabled: true
   image:
