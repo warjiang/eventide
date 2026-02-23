@@ -29,6 +29,19 @@ export default function EventTrace({ events, isStreaming }: EventTraceProps) {
             } else {
                 rendered.push({ type: 'event', evt })
             }
+        } else if (evt.type === 'message.delta') {
+            const lastRendered = rendered[rendered.length - 1]
+            if (lastRendered && lastRendered.type === 'event' && lastRendered.evt.type === 'message.delta') {
+                lastRendered.evt = {
+                    ...lastRendered.evt,
+                    payload: {
+                        ...(lastRendered.evt.payload || {}),
+                        delta: (lastRendered.evt.payload?.delta || '') + (evt.payload?.delta || '')
+                    }
+                }
+            } else {
+                rendered.push({ type: 'event', evt: { ...evt, payload: { ...(evt.payload || {}) } } })
+            }
         } else {
             rendered.push({ type: 'event', evt })
         }
