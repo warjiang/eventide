@@ -1,5 +1,6 @@
+import { useState } from 'react'
 import { Badge } from "@/components/ui/badge"
-import { PenTool, CheckCircle2, Clock } from 'lucide-react'
+import { PenTool, CheckCircle2, Clock, ChevronDown, ChevronRight } from 'lucide-react'
 import MarkdownRenderer from './MarkdownRenderer'
 
 interface EventTraceProps {
@@ -87,7 +88,7 @@ function EventItem({ evt }: { evt: any }) {
                         <Badge variant="outline" className="text-[9px] font-mono bg-amber-500/10 text-amber-500 hover:bg-amber-500/20 mb-0.5 py-0 h-4">
                             MESSAGE
                         </Badge>
-                        <div className="text-xs">
+                        <div className="text-sm mt-1">
                             <MarkdownRenderer content={evt.payload?.delta || ''} />
                         </div>
                     </div>
@@ -115,7 +116,7 @@ function EventItem({ evt }: { evt: any }) {
                             TURN COMPLETED
                         </Badge>
                         {evt.payload?.output && (
-                            <div className="text-[10px] text-muted-foreground">
+                            <div className="text-sm mt-1 text-foreground">
                                 <MarkdownRenderer content={String(evt.payload.output)} />
                             </div>
                         )}
@@ -165,6 +166,7 @@ function EventItem({ evt }: { evt: any }) {
 }
 
 function ToolCallCard({ started, completed }: { started: any, completed: any }) {
+    const [isExpanded, setIsExpanded] = useState(false)
     const toolName = started?.payload?.tool || 'unknown'
     const args = started?.payload?.arguments
     const result = completed?.payload?.result
@@ -176,20 +178,37 @@ function ToolCallCard({ started, completed }: { started: any, completed: any }) 
                 <Badge variant="outline" className="text-[9px] font-mono bg-cyan-500/10 text-cyan-500 hover:bg-cyan-500/20 mb-1 py-0 h-4">
                     TOOL CALL
                 </Badge>
-                <div className="mt-1 p-2.5 bg-card border border-border rounded-md shadow-sm">
-                    <div className="font-semibold text-xs text-cyan-600 dark:text-cyan-400 mb-1 flex items-center gap-1.5 flex-wrap">
-                        <span className="flex items-center gap-1"><PenTool className="w-3 h-3" /> {toolName}</span>
-                        {completed && <span className="text-emerald-500 text-[10px] flex items-center gap-0.5"><CheckCircle2 className="w-2.5 h-2.5" /> Done</span>}
-                        {!completed && <span className="text-muted-foreground text-[10px] animate-pulse flex items-center gap-0.5"><Clock className="w-2.5 h-2.5" /> Executing</span>}
-                    </div>
-                    {args && (
-                        <div className="font-mono text-[10px] text-muted-foreground bg-muted/50 p-2 rounded max-h-24 overflow-y-auto">
-                            {JSON.stringify(args, null, 2)}
+                <div className="mt-1 bg-card border border-border rounded-md shadow-sm overflow-hidden text-cyan-600 dark:text-cyan-400">
+                    <div
+                        className="p-2.5 flex items-center justify-between cursor-pointer hover:bg-muted/50 transition-colors"
+                        onClick={() => setIsExpanded(!isExpanded)}
+                    >
+                        <div className="font-semibold text-xs flex items-center gap-1.5 flex-wrap">
+                            <span className="flex items-center gap-1">
+                                {isExpanded ? <ChevronDown className="w-3 h-3 text-cyan-600/70" /> : <ChevronRight className="w-3 h-3 text-cyan-600/70" />}
+                                <PenTool className="w-3 h-3" /> {toolName}
+                            </span>
                         </div>
-                    )}
-                    {result && (
-                        <div className="mt-2 p-2 bg-emerald-500/10 border border-emerald-500/20 rounded font-mono text-[10px] text-emerald-600 dark:text-emerald-400 overflow-x-auto">
-                            → {String(result)}
+                        <div className="flex items-center gap-1.5">
+                            {completed ? (
+                                <span className="text-emerald-500 text-[10px] flex items-center gap-0.5"><CheckCircle2 className="w-2.5 h-2.5" /> Done</span>
+                            ) : (
+                                <span className="text-muted-foreground text-[10px] animate-pulse flex items-center gap-0.5"><Clock className="w-2.5 h-2.5" /> Executing</span>
+                            )}
+                        </div>
+                    </div>
+                    {isExpanded && (args || result) && (
+                        <div className="px-2.5 pb-2.5 border-t border-border/40 pt-2 bg-muted/10">
+                            {args && (
+                                <div className="font-mono text-[10px] text-muted-foreground bg-muted/50 p-2 rounded max-h-24 overflow-y-auto mb-2">
+                                    {JSON.stringify(args, null, 2)}
+                                </div>
+                            )}
+                            {result && (
+                                <div className="p-2 bg-emerald-500/10 border border-emerald-500/20 rounded font-mono text-[10px] text-emerald-600 dark:text-emerald-400 overflow-x-auto">
+                                    → {String(result)}
+                                </div>
+                            )}
                         </div>
                     )}
                 </div>

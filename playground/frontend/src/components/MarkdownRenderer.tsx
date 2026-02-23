@@ -1,4 +1,4 @@
-import ReactMarkdown from 'react-markdown'
+import { Streamdown } from 'streamdown'
 import remarkGfm from 'remark-gfm'
 
 interface MarkdownRendererProps {
@@ -9,23 +9,28 @@ interface MarkdownRendererProps {
 export default function MarkdownRenderer({ content, className = '' }: MarkdownRendererProps) {
     return (
         <div className={`prose prose-sm dark:prose-invert max-w-none ${className}`}>
-            <ReactMarkdown
+            <Streamdown
                 remarkPlugins={[remarkGfm]}
                 components={{
                     // Custom styling for code blocks
                     code({ node, inline, className, children, ...props }: any) {
                         const match = /language-(\w+)/.exec(className || '')
                         return !inline && match ? (
-                            <div className="rounded-md bg-muted/50 p-3 my-2 overflow-x-auto">
-                                <pre className="text-xs font-mono">
-                                    <code className={className} {...props}>
-                                        {children}
-                                    </code>
-                                </pre>
+                            <div className="not-prose my-4 rounded-lg border border-border bg-[#f6f8fa] dark:bg-[#0d1117] overflow-hidden shadow-sm">
+                                <div className="flex items-center px-4 py-2 bg-muted/50 border-b border-border text-xs text-muted-foreground font-sans uppercase tracking-wider">
+                                    {match[1]}
+                                </div>
+                                <div className="overflow-x-auto p-4">
+                                    <pre className="text-[13px] leading-relaxed font-mono text-gray-900 dark:text-gray-100 bg-transparent m-0 p-0">
+                                        <code className={className} {...props}>
+                                            {String(children).replace(/\n$/, '')}
+                                        </code>
+                                    </pre>
+                                </div>
                             </div>
                         ) : (
                             <code
-                                className="px-1.5 py-0.5 rounded bg-muted/50 text-xs font-mono"
+                                className="px-1.5 py-0.5 rounded-md bg-muted text-[13px] font-mono text-foreground"
                                 {...props}
                             >
                                 {children}
@@ -141,7 +146,7 @@ export default function MarkdownRenderer({ content, className = '' }: MarkdownRe
                 }}
             >
                 {content}
-            </ReactMarkdown>
+            </Streamdown>
         </div>
     )
 }

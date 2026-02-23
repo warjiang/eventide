@@ -1,6 +1,5 @@
 import { useEffect, useRef } from 'react'
 import EventTrace from './EventTrace'
-import MarkdownRenderer from './MarkdownRenderer'
 import { MessageSquare, User, Bot } from 'lucide-react'
 
 interface ChatViewProps {
@@ -32,14 +31,6 @@ export default function ChatView({ messages, streamingEvents, isStreaming }: Cha
         )
     }
 
-    // Collect streaming message delta text
-    const streamingText = isStreaming
-        ? streamingEvents
-            .filter((e: any) => e.type === 'message.delta')
-            .map((e: any) => e.payload?.delta || '')
-            .join('')
-        : ''
-
     // Get final output from turn.completed in streaming events
     const turnCompleted = streamingEvents?.find(
         (e: any) => e.type === 'turn.completed' || e.type === 'turn.failed'
@@ -50,8 +41,7 @@ export default function ChatView({ messages, streamingEvents, isStreaming }: Cha
             <div className="max-w-4xl mx-auto px-3 py-4 md:px-4 md:py-5 lg:px-6 space-y-5">
                 {messages.map((msg, i) => (
                     <div key={i} className="animate-in fade-in slide-in-from-bottom-2 duration-300">
-                        <div className={`text-[10px] font-semibold uppercase tracking-wider mb-2 flex items-center gap-1.5 ${msg.role === 'user' ? 'text-primary' : 'text-emerald-500'
-                            }`}>
+                        <div className={`text-[10px] font-semibold uppercase tracking-wider mb-2 flex items-center gap-1.5 ${msg.role === 'user' ? 'text-primary' : 'text-emerald-500'}`}>
                             {msg.role === 'user' ? (
                                 <>
                                     <User className="w-3 h-3" />
@@ -65,18 +55,15 @@ export default function ChatView({ messages, streamingEvents, isStreaming }: Cha
                             )}
                         </div>
 
-                        <div className={`rounded-lg p-3 border ${msg.role === 'user' ? 'bg-primary/5 border-primary/20' : 'bg-surface/30 border-border/30'
-                            }`}>
-                            {msg.role === 'user' ? (
+                        {msg.role === 'user' && (
+                            <div className="rounded-lg p-3 border bg-primary/5 border-primary/20">
                                 <div className="text-sm leading-relaxed text-foreground whitespace-pre-wrap">
                                     {msg.content}
                                 </div>
-                            ) : (
-                                <MarkdownRenderer content={msg.content} />
-                            )}
-                        </div>
+                            </div>
+                        )}
 
-                        {msg.events?.length > 0 && (
+                        {msg.events && msg.events.length > 0 && (
                             <div className="mt-3 pl-4">
                                 <EventTrace events={msg.events} isStreaming={false} />
                             </div>
@@ -91,13 +78,6 @@ export default function ChatView({ messages, streamingEvents, isStreaming }: Cha
                             <Bot className="w-3 h-3" />
                             Agent
                         </div>
-
-                        {streamingText && (
-                            <div className="bg-surface/30 rounded-lg p-3 border border-border/30">
-                                <MarkdownRenderer content={streamingText} />
-                                <span className="inline-block w-0.5 h-4 bg-primary ml-0.5 align-text-bottom animate-pulse" />
-                            </div>
-                        )}
 
                         <div className="mt-3 pl-3">
                             <EventTrace
