@@ -2,7 +2,7 @@
 sidebar_position: 2
 ---
 
-# Getting Started
+# Eventide 安装
 
 本指南将帮助你快速搭建 Lumina Scheduler 环境。
 

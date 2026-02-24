@@ -2,7 +2,7 @@
 sidebar_position: 1
 ---
 
-# Eventide
+# 什么是 Eventide
 
 Eventide 通过 Event 解耦 Agent 运行时和消费端， 支持多语言、异构 Agent 框架将 Agent 运行时的事件暴露出来，供终端（比如 Web 前端、IM 端）消费。
 

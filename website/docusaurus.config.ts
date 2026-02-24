@@ -5,7 +5,7 @@ import type * as Preset from '@docusaurus/preset-classic';
 const config: Config = {
   title: 'Eventide',
   tagline: 'Event-driven Agent Task Scheduling System',
-  favicon: 'img/favicon.ico',
+  favicon: 'img/logo-v2.jpg',
 
   future: {
     v4: true,
@@ -58,7 +58,7 @@ const config: Config = {
       respectPrefersColorScheme: true,
     },
     navbar: {
-      title: 'Eventide',
+      title: 'Eventide ',
       logo: {
         alt: 'Eventide Logo',
         src: 'img/logo-v2.jpg',
