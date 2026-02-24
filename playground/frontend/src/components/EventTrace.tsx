@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Badge } from "@/components/ui/badge"
-import { PenTool, CheckCircle2, Clock, ChevronDown, ChevronRight } from 'lucide-react'
+import { Wrench, CheckCircle2, Clock, ChevronDown, ChevronRight } from 'lucide-react'
 import MarkdownRenderer from './MarkdownRenderer'
 
 interface EventTraceProps {
@@ -199,7 +199,7 @@ function ToolCallCard({ started, completed }: { started: any, completed: any }) 
                         <div className="font-semibold text-xs flex items-center gap-1.5 flex-wrap">
                             <span className="flex items-center gap-1">
                                 {isExpanded ? <ChevronDown className="w-3 h-3 text-cyan-600/70" /> : <ChevronRight className="w-3 h-3 text-cyan-600/70" />}
-                                <PenTool className="w-3 h-3" /> {toolName}
+                                <Wrench className="w-3 h-3" /> {toolName}
                             </span>
                         </div>
                         <div className="flex items-center gap-1.5">
