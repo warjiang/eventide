@@ -5,6 +5,7 @@ import ChatView from './components/ChatView'
 import ChatInput from './components/ChatInput'
 import ThemeToggle from './components/ThemeToggle'
 import { useTheme } from './hooks/useTheme'
+import { useParams, useNavigate } from 'react-router-dom'
 import { Zap, Bot, AlertTriangle } from 'lucide-react'
 import {
     invokeAgent,
@@ -19,14 +20,16 @@ import { Agent, SessionData } from './api'
 
 export default function App() {
     const { theme, setTheme, isDark } = useTheme()
+    const { sessionId: activeSessionId } = useParams()
+    const navigate = useNavigate()
     const [selectedAgent, setSelectedAgent] = useState<Agent | null>(null)
     const [sessions, setSessions] = useState<SessionData[]>([])
-    const [activeSessionId, setActiveSessionId] = useState<string | null>(null)
     const [messages, setMessages] = useState<any[]>([])
     const [isStreaming, setIsStreaming] = useState<boolean>(false)
     const [streamingEvents, setStreamingEvents] = useState<any[]>([])
     const [error, setError] = useState<string | null>(null)
     const eventSourceRef = useRef<EventSource | null>(null)
+    const ignoreSessionChangeRef = useRef(false)
 
     // ── Session management ──────────────────────────────────────────────
 
@@ -45,6 +48,64 @@ export default function App() {
         refreshSessions()
     }, [refreshSessions])
 
+    // Load session when URL changes
+    useEffect(() => {
+        if (ignoreSessionChangeRef.current) {
+            ignoreSessionChangeRef.current = false
+            return
+        }
+
+        if (!activeSessionId) {
+            if (eventSourceRef.current) {
+                eventSourceRef.current.close()
+                eventSourceRef.current = null
+            }
+            setIsStreaming(false)
+            setStreamingEvents([])
+            setMessages([])
+            return
+        }
+
+        let isMounted = true
+
+        const loadSession = async () => {
+            // Close any active SSE connection
+            if (eventSourceRef.current) {
+                eventSourceRef.current.close()
+                eventSourceRef.current = null
+            }
+            setIsStreaming(false)
+            setStreamingEvents([])
+            setMessages([])
+
+            // Load session messages from backend
+            try {
+                const resp = await fetch(`/api/sessions/${activeSessionId}`)
+                if (resp.ok) {
+                    const session = await resp.json()
+                    if (isMounted) {
+                        setMessages(session.messages || [])
+                        // Auto-select the agent for this session
+                        if (session.agent_name) {
+                            setSelectedAgent({
+                                name: session.agent_name,
+                                namespace: session.namespace || 'default',
+                            })
+                        }
+                    }
+                }
+            } catch (err: any) {
+                console.error('Failed to load session:', err)
+            }
+        }
+
+        loadSession()
+
+        return () => {
+            isMounted = false
+        }
+    }, [activeSessionId])
+
     const handleCreateSession = useCallback(async () => {
         if (!selectedAgent) return
         try {
@@ -54,45 +115,17 @@ export default function App() {
                 'New Chat'
             )
             await refreshSessions()
-            setActiveSessionId(session.session_id)
-            setMessages([])
-            setStreamingEvents([])
-            setIsStreaming(false)
+            navigate(`/chat/${session.session_id}`)
         } catch (err: any) {
             setError(err.message)
         }
-    }, [selectedAgent, refreshSessions])
+    }, [selectedAgent, refreshSessions, navigate])
 
     const handleSelectSession = useCallback(
-        async (sessionId: string) => {
-            setActiveSessionId(sessionId)
-            // Close any active SSE connection
-            if (eventSourceRef.current) {
-                eventSourceRef.current.close()
-                eventSourceRef.current = null
-            }
-            setIsStreaming(false)
-            setStreamingEvents([])
-
-            // Load session messages from backend
-            try {
-                const resp = await fetch(`/api/sessions/${sessionId}`)
-                if (resp.ok) {
-                    const session = await resp.json()
-                    setMessages(session.messages || [])
-                    // Auto-select the agent for this session
-                    if (session.agent_name) {
-                        setSelectedAgent({
-                            name: session.agent_name,
-                            namespace: session.namespace || 'default',
-                        })
-                    }
-                }
-            } catch (err: any) {
-                console.error('Failed to load session:', err)
-            }
+        (sessionId: string) => {
+            navigate(`/chat/${sessionId}`)
         },
-        []
+        [navigate]
     )
 
     const handleDeleteSession = useCallback(
@@ -100,15 +133,14 @@ export default function App() {
             try {
                 await deleteSession(sessionId)
                 if (activeSessionId === sessionId) {
-                    setActiveSessionId(null)
-                    setMessages([])
+                    navigate('/')
                 }
                 await refreshSessions()
             } catch (err: any) {
                 console.error('Failed to delete session:', err)
             }
         },
-        [activeSessionId, refreshSessions]
+        [activeSessionId, refreshSessions, navigate]
     )
 
     // ── Send message ────────────────────────────────────────────────────
@@ -135,7 +167,8 @@ export default function App() {
                     )
                     sessionId = session.session_id
                     threadId = session.thread_id
-                    setActiveSessionId(sessionId)
+                    ignoreSessionChangeRef.current = true
+                    navigate(`/chat/${sessionId}`, { replace: true })
                     await refreshSessions()
                 } catch (err: any) {
                     setError(`Failed to create session: ${err.message}`)
@@ -245,7 +278,7 @@ export default function App() {
                 setError(err.message)
             }
         },
-        [selectedAgent, isStreaming, activeSessionId, sessions, refreshSessions]
+        [selectedAgent, isStreaming, activeSessionId, sessions, refreshSessions, navigate]
     )
 
     // ── Render ──────────────────────────────────────────────────────────
@@ -274,7 +307,7 @@ export default function App() {
                         s.agent_name === selectedAgent.name &&
                         s.namespace === selectedAgent.namespace
                     )}
-                    activeSessionId={activeSessionId}
+                    activeSessionId={activeSessionId || null}
                     onSelect={handleSelectSession}
                     onDelete={handleDeleteSession}
                     onCreate={handleCreateSession}
