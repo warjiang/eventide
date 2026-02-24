@@ -38,7 +38,12 @@ spec:
             - name: BEACON_URL
               value: {{ printf "http://%s-beacon:%d" (include "eventide.fullname" .) (int .Values.beacon.service.port) | quote }}
             - name: AGENTCUBE_ROUTER_URL
-              value: {{ printf "http://%s-gateway:%d" (include "eventide.fullname" .) (int .Values.gateway.service.port) | quote }}
+              value: http://agentcube-router.agentcube.svc:8080
+            - name: PG_CONN
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "eventide.secretsName" . }}
+                  key: PG_CONN
           livenessProbe:
             httpGet:
               path: /healthz
