@@ -20,6 +20,11 @@ export default defineConfig({
         target: 'http://127.0.0.1:8000',
         changeOrigin: true,
       },
+      // for remote development
+      // '/api': {
+      //   target: 'http://127.0.0.1:28000',
+      //   changeOrigin: true,
+      // },
     },
   },
 })
