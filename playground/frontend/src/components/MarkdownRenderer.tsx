@@ -8,32 +8,42 @@ interface MarkdownRendererProps {
 
 export default function MarkdownRenderer({ content, className = '' }: MarkdownRendererProps) {
     return (
-        <div className={`prose prose-sm dark:prose-invert max-w-none [&_li>p]:my-0 [&_li>p]:inline [&_ul]:my-1 [&_ol]:my-1 leading-relaxed ${className}`}>
+        <div className={`prose prose-sm dark:prose-invert max-w-none [&_li>p]:my-0 [&_li>p]:inline [&_ul]:my-1 [&_ol]:my-1 leading-relaxed [&_:not(pre)>code]:bg-muted [&_:not(pre)>code]:px-1.5 [&_:not(pre)>code]:py-0.5 [&_:not(pre)>code]:rounded-md [&_:not(pre)>code]:text-[13px] [&_:not(pre)>code]:font-mono [&_:not(pre)>code]:text-foreground [&_code::before]:hidden [&_code::after]:hidden ${className}`}>
             <Streamdown
                 remarkPlugins={[remarkGfm]}
                 components={{
-                    // Custom styling for code blocks
-                    code({ node, inline, className, children, ...props }: any) {
-                        const match = /language-(\w+)/.exec(className || '')
-                        return !inline && match ? (
+                    // Custom styling for code block containers
+                    pre({ children, ...props }: any) {
+                        let languageMatch = null;
+                        if (children && children.props && children.props.className) {
+                            languageMatch = /language-(\w+)/.exec(children.props.className || '');
+                        } else if (Array.isArray(children)) {
+                            const codeChild = children.find((c: any) => c?.props?.className?.includes('language-'));
+                            if (codeChild) {
+                                languageMatch = /language-(\w+)/.exec(codeChild.props.className || '');
+                            }
+                        }
+
+                        return (
                             <div className="not-prose my-4 rounded-lg border border-border bg-[#f6f8fa] dark:bg-[#0d1117] overflow-hidden shadow-sm">
-                                <div className="flex items-center px-4 py-2 bg-muted/50 border-b border-border text-xs text-muted-foreground font-sans uppercase tracking-wider">
-                                    {match[1]}
-                                </div>
+                                {languageMatch && (
+                                    <div className="flex items-center px-4 py-2 bg-muted/50 border-b border-border text-xs text-muted-foreground font-sans uppercase tracking-wider">
+                                        {languageMatch[1]}
+                                    </div>
+                                )}
                                 <div className="overflow-x-auto p-4">
-                                    <pre className="text-[13px] leading-relaxed font-mono text-gray-900 dark:text-gray-100 bg-transparent m-0 p-0">
-                                        <code className={className} {...props}>
-                                            {String(children).replace(/\n$/, '')}
-                                        </code>
+                                    <pre className="text-[13px] leading-relaxed font-mono text-gray-900 dark:text-gray-100 bg-transparent m-0 p-0" {...props}>
+                                        {children}
                                     </pre>
                                 </div>
                             </div>
-                        ) : (
-                            <code
-                                className="px-1.5 py-0.5 rounded-md bg-muted text-[13px] font-mono text-foreground"
-                                {...props}
-                            >
-                                {children}
+                        )
+                    },
+                    // Custom styling for code text
+                    code({ node, inline, className, children, ...props }: any) {
+                        return (
+                            <code className={className} {...props}>
+                                {typeof children === 'string' ? children.replace(/\n$/, '') : children}
                             </code>
                         )
                     },
