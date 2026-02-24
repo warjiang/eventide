@@ -50,9 +50,10 @@ AGENTCUBE_ROUTER_URL = os.getenv("AGENTCUBE_ROUTER_URL", "http://localhost:18081
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("playground")
 
-# ── In-memory session store ──────────────────────────────────────────────
+# ── Session store ────────────────────────────────────────────────────────
+from store import SessionStore
 
-sessions: dict[str, Session] = {}
+sessions_store = SessionStore()
 
 
 # ── Lifespan ─────────────────────────────────────────────────────────────
@@ -230,7 +231,7 @@ async def invoke_agent(req: InvokeRequest):
         
         # Look up agentcube_session_id from the playground session
         agentcube_session_id = None
-        session = sessions.get(req.session_id) if req.session_id else None
+        session = sessions_store.get(req.session_id) if req.session_id else None
         if session and not session.is_agentcube_session_expired():
             agentcube_session_id = session.agentcube_session_id
             headers["x-agentcube-session-id"] = agentcube_session_id
@@ -280,6 +281,7 @@ async def invoke_agent(req: InvokeRequest):
             if new_agentcube_session_id:
                 session.agentcube_session_id = new_agentcube_session_id
                 logger.info(f"Stored agentcube session_id: {new_agentcube_session_id}")
+            sessions_store.save(session)
 
         return InvokeResponse(
             thread_id=returned_thread_id,
@@ -349,7 +351,7 @@ async def stream_events(thread_id: str, request: Request, turn_id: Optional[str]
 async def list_sessions():
     """List all sessions (most recent first)."""
     summaries = []
-    for s in sorted(sessions.values(), key=lambda x: x.created_at, reverse=True):
+    for s in sessions_store.get_all():
         summaries.append(SessionSummary(
             session_id=s.session_id,
             thread_id=s.thread_id,
@@ -380,7 +382,7 @@ async def create_session(req: CreateSessionRequest):
         title=req.title,
         session_timeout_ms=session_timeout_ms,
     )
-    sessions[session_id] = session
+    sessions_store.save(session)
     logger.info(f"Created session {session_id} with timeout {session_timeout_ms}ms")
     return session
 
@@ -394,7 +396,7 @@ async def healthz():
 @app.get("/api/sessions/{session_id}", response_model=Session)
 async def get_session(session_id: str):
     """Get a session by ID."""
-    session = sessions.get(session_id)
+    session = sessions_store.get(session_id)
     if not session:
         raise HTTPException(status_code=404, detail="Session not found")
     return session
@@ -403,7 +405,7 @@ async def get_session(session_id: str):
 @app.post("/api/sessions/{session_id}/messages")
 async def add_message(session_id: str, message: Message):
     """Append a message to a session."""
-    session = sessions.get(session_id)
+    session = sessions_store.get(session_id)
     if not session:
         raise HTTPException(status_code=404, detail="Session not found")
     session.messages.append(message)
@@ -413,15 +415,16 @@ async def add_message(session_id: str, message: Message):
     # Auto-update title from first user message
     if len(session.messages) == 1 and message.role == MessageRole.USER:
         session.title = message.content[:50] + ("..." if len(message.content) > 50 else "")
+    sessions_store.save(session)
     return {"ok": True}
 
 
 @app.delete("/api/sessions/{session_id}")
 async def delete_session(session_id: str):
     """Delete a session."""
-    if session_id not in sessions:
+    if not sessions_store.get(session_id):
         raise HTTPException(status_code=404, detail="Session not found")
-    del sessions[session_id]
+    sessions_store.delete(session_id)
     return {"ok": True}
 
 
