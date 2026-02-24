@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button"
-import { ScrollArea } from "@/components/ui/scroll-area"
 import { PlusIcon, TrashIcon, MessageCircle, Bot } from 'lucide-react'
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
 
 import { SessionData, Agent } from "../api"
 
@@ -28,9 +28,9 @@ export default function SessionList({
                     <MessageCircle className="w-3 h-3" />
                     Sessions
                 </span>
-                <Button 
-                    onClick={onCreate} 
-                    size="sm" 
+                <Button
+                    onClick={onCreate}
+                    size="sm"
                     className="h-7 gap-1.5 cursor-pointer bg-primary hover:bg-primary/90 transition-all duration-200 hover:scale-105 active:scale-95 rounded-md text-xs px-2.5"
                 >
                     <PlusIcon className="w-3 h-3" />
@@ -38,7 +38,8 @@ export default function SessionList({
                 </Button>
             </div>
 
-            <ScrollArea className="flex-1">
+            {/* Use native overflow-y-auto instead of ScrollArea to avoid display:table breaking truncation */}
+            <div className="flex-1 overflow-y-auto">
                 <div className="px-2 pt-2 pb-6 flex flex-col gap-1">
                     {!selectedAgent ? (
                         <div className="py-8 px-4 text-center text-xs text-muted-foreground">
@@ -54,39 +55,50 @@ export default function SessionList({
                         </div>
                     ) : (
                         sessions.map((s) => (
-                            <div
-                                key={s.session_id}
-                                className={`group flex items-center justify-between px-3 py-2.5 rounded-lg cursor-pointer transition-all duration-200 ${s.session_id === activeSessionId
-                                    ? 'bg-primary/10 border border-primary/20 text-foreground'
-                                    : 'hover:bg-surface/50 hover:border-border/30 border border-transparent'
-                                    }`}
-                                onClick={() => onSelect(s.session_id)}
-                            >
-                                <div className="flex-1 min-w-0 mr-2">
-                                    <div className="text-sm font-medium truncate leading-tight">{s.title}</div>
-                                    <div className="text-[10px] text-muted-foreground mt-0.5 flex items-center gap-1.5">
-                                        <span className="font-mono text-[9px] px-1 py-0 rounded bg-surface/50">{s.agent_name}</span>
-                                        <span>·</span>
-                                        <span>{s.message_count} msgs</span>
+                            <Tooltip key={s.session_id} delayDuration={300}>
+                                <TooltipTrigger asChild>
+                                    <div
+                                        className={`group flex items-center px-3 py-2.5 rounded-lg cursor-pointer transition-all duration-200 ${s.session_id === activeSessionId
+                                            ? 'bg-primary/10 border border-primary/20 text-foreground'
+                                            : 'hover:bg-surface/50 hover:border-border/30 border border-transparent'
+                                            }`}
+                                        onClick={() => onSelect(s.session_id)}
+                                    >
+                                        {/* Text content: title + meta, constrained with overflow-hidden */}
+                                        <div className="flex-1 min-w-0 overflow-hidden text-left">
+                                            <div className="text-sm font-medium leading-tight overflow-hidden text-ellipsis whitespace-nowrap">
+                                                {s.title}
+                                            </div>
+                                            <div className="text-[10px] text-muted-foreground mt-0.5 flex items-center gap-1.5">
+                                                <span className="font-mono text-[9px] px-1 py-0 rounded bg-surface/50">{s.agent_name}</span>
+                                                <span>·</span>
+                                                <span>{s.message_count} msgs</span>
+                                            </div>
+                                        </div>
+
+                                        {/* Delete button */}
+                                        <Button
+                                            variant="ghost"
+                                            size="icon"
+                                            className="w-7 h-7 ml-2 opacity-0 group-hover:opacity-100 text-destructive hover:bg-destructive/10 hover:text-destructive shrink-0 transition-all duration-200"
+                                            onClick={(e: React.MouseEvent) => {
+                                                e.stopPropagation()
+                                                onDelete(s.session_id)
+                                            }}
+                                            title="Delete session"
+                                        >
+                                            <TrashIcon className="w-3.5 h-3.5" />
+                                        </Button>
                                     </div>
-                                </div>
-                                <Button
-                                    variant="ghost"
-                                    size="icon"
-                                    className="w-7 h-7 opacity-0 group-hover:opacity-100 text-destructive hover:bg-destructive/10 hover:text-destructive shrink-0 transition-all duration-200"
-                                    onClick={(e: React.MouseEvent) => {
-                                        e.stopPropagation()
-                                        onDelete(s.session_id)
-                                    }}
-                                    title="Delete session"
-                                >
-                                    <TrashIcon className="w-3.5 h-3.5" />
-                                </Button>
-                            </div>
+                                </TooltipTrigger>
+                                <TooltipContent side="right" sideOffset={10} className="max-w-[300px] break-words">
+                                    <p className="text-sm">{s.title}</p>
+                                </TooltipContent>
+                            </Tooltip>
                         ))
                     )}
                 </div>
-            </ScrollArea>
+            </div>
         </div>
     )
 }
