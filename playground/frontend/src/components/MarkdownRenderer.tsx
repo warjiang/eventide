@@ -8,7 +8,7 @@ interface MarkdownRendererProps {
 
 export default function MarkdownRenderer({ content, className = '' }: MarkdownRendererProps) {
     return (
-        <div className={`prose prose-sm dark:prose-invert max-w-none ${className}`}>
+        <div className={`prose prose-sm dark:prose-invert max-w-none [&_li>p]:my-0 [&_li>p]:inline [&_ul]:my-1 [&_ol]:my-1 leading-relaxed ${className}`}>
             <Streamdown
                 remarkPlugins={[remarkGfm]}
                 components={{
@@ -53,16 +53,23 @@ export default function MarkdownRenderer({ content, className = '' }: MarkdownRe
                     // Custom styling for lists
                     ul({ children, ...props }: any) {
                         return (
-                            <ul className="list-disc list-inside space-y-1 my-2" {...props}>
+                            <ul className="list-disc list-inside space-y-0.5 my-1 ml-1" {...props}>
                                 {children}
                             </ul>
                         )
                     },
                     ol({ children, ...props }: any) {
                         return (
-                            <ol className="list-decimal list-inside space-y-1 my-2" {...props}>
+                            <ol className="list-decimal list-outside space-y-0.5 my-1 ml-4" {...props}>
                                 {children}
                             </ol>
+                        )
+                    },
+                    li({ children, ...props }: any) {
+                        return (
+                            <li className="leading-relaxed my-0.5" {...props}>
+                                {children}
+                            </li>
                         )
                     },
                     // Custom styling for headings
@@ -90,7 +97,7 @@ export default function MarkdownRenderer({ content, className = '' }: MarkdownRe
                     // Custom styling for paragraphs
                     p({ children, ...props }: any) {
                         return (
-                            <p className="leading-relaxed my-2" {...props}>
+                            <p className="leading-relaxed my-1" {...props}>
                                 {children}
                             </p>
                         )
@@ -99,7 +106,7 @@ export default function MarkdownRenderer({ content, className = '' }: MarkdownRe
                     blockquote({ children, ...props }: any) {
                         return (
                             <blockquote
-                                className="border-l-2 border-border pl-3 italic text-muted-foreground my-2"
+                                className="border-l-2 border-border pl-3 italic text-muted-foreground my-1"
                                 {...props}
                             >
                                 {children}
