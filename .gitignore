@@ -19,3 +19,10 @@ charts/install.yaml
 node_modules
 .trae
 .agent
+
+# MkDocs build output
+site/
+
+# Python virtualenvs
+.venv/
+venv/
