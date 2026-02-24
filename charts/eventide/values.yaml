@@ -82,6 +82,9 @@ referenceAgent:
 playground:
   enabled: true
   replicaCount: 1
+  serviceAccount:
+    create: true
+    name: ""
   image:
     repository: ghcr.io/warjiang/eventide/playground
     tag: "latest"
