@@ -2,37 +2,26 @@ import {themes as prismThemes} from 'prism-react-renderer';
 import type {Config} from '@docusaurus/types';
 import type * as Preset from '@docusaurus/preset-classic';
 
-// This runs in Node.js - Don't use client-side code here (browser APIs, JSX...)
-
 const config: Config = {
-  title: 'Lumina Scheduler',
-  tagline: 'Eventide Project Documentation',
-  favicon: 'img/favicon.ico',
+  title: 'Eventide',
+  tagline: 'Event-driven Agent Task Scheduling System',
+  favicon: 'img/logo-v2.jpg',
 
-  // Future flags, see https://docusaurus.io/docs/api/docusaurus-config#future
   future: {
-    v4: true, // Improve compatibility with the upcoming Docusaurus v4
+    v4: true,
   },
 
-  // Set the production url of your site here
   url: 'https://warjiang.github.io',
-  // Set the /<baseUrl>/ pathname under which your site is served
-  // For GitHub pages deployment, it is often '/<projectName>/'
   baseUrl: '/eventide/',
 
-  // GitHub pages deployment config.
-  // If you aren't using GitHub pages, you don't need these.
-  organizationName: 'warjiang', // Usually your GitHub org/user name.
-  projectName: 'eventide', // Usually your repo name.
+  organizationName: 'warjiang',
+  projectName: 'eventide',
 
   onBrokenLinks: 'throw',
 
-  // Even if you don't use internationalization, you can use this field to set
-  // useful metadata like html lang. For example, if your site is Chinese, you
-  // may want to replace "en" with "zh-Hans".
   i18n: {
-    defaultLocale: 'en',
-    locales: ['en'],
+    defaultLocale: 'zh-Hans',
+    locales: ['zh-Hans'],
   },
 
   presets: [
@@ -41,8 +30,6 @@ const config: Config = {
       {
         docs: {
           sidebarPath: './sidebars.ts',
-          // Please change this to your repo.
-          // Remove this to remove the "edit this page" links.
           editUrl:
             'https://github.com/warjiang/eventide/tree/main/website/',
         },
@@ -52,11 +39,8 @@ const config: Config = {
             type: ['rss', 'atom'],
             xslt: true,
           },
-          // Please change this to your repo.
-          // Remove this to remove the "edit this page" links.
           editUrl:
             'https://github.com/warjiang/eventide/tree/main/website/',
-          // Useful options to enforce blogging best practices
           onInlineTags: 'warn',
           onInlineAuthors: 'warn',
           onUntruncatedBlogPosts: 'warn',
@@ -69,25 +53,24 @@ const config: Config = {
   ],
 
   themeConfig: {
-    // Replace with your project's social card
     image: 'img/docusaurus-social-card.jpg',
     colorMode: {
       respectPrefersColorScheme: true,
     },
     navbar: {
-      title: 'Lumina Scheduler',
+      title: 'Eventide ',
       logo: {
-        alt: 'Lumina Scheduler Logo',
-        src: 'img/logo.svg',
+        alt: 'Eventide Logo',
+        src: 'img/logo-v2.jpg',
       },
       items: [
         {
           type: 'docSidebar',
           sidebarId: 'tutorialSidebar',
           position: 'left',
-          label: 'Tutorial',
+          label: '文档',
         },
-        {to: '/blog', label: 'Blog', position: 'left'},
+        // {to: '/blog', label: '博客', position: 'left'},
         {
           href: 'https://github.com/warjiang/eventide',
           label: 'GitHub',
@@ -99,38 +82,30 @@ const config: Config = {
       style: 'dark',
       links: [
         {
-          title: 'Docs',
+          title: '文档',
           items: [
             {
-              label: 'Tutorial',
-              to: '/docs/intro',
+              label: '快速开始',
+              to: '/docs/getting-started',
             },
           ],
         },
         {
-          title: 'Community',
+          title: '社区',
           items: [
             {
-              label: 'Stack Overflow',
-              href: 'https://stackoverflow.com/questions/tagged/docusaurus',
-            },
-            {
-              label: 'Discord',
-              href: 'https://discordapp.com/invite/docusaurus',
-            },
-            {
-              label: 'X',
-              href: 'https://x.com/docusaurus',
+              label: 'GitHub',
+              href: 'https://github.com/warjiang/eventide',
             },
           ],
         },
         {
-          title: 'More',
+          title: '更多',
           items: [
-            {
-              label: 'Blog',
-              to: '/blog',
-            },
+            // {
+            //   label: '博客',
+            //   to: '/blog',
+            // },
             {
               label: 'GitHub',
               href: 'https://github.com/warjiang/eventide',
@@ -138,7 +113,7 @@ const config: Config = {
           ],
         },
       ],
-      copyright: `Copyright © ${new Date().getFullYear()} Lumina Scheduler. Built with Docusaurus.`,
+      copyright: `Copyright © ${new Date().getFullYear()} Eventide. Built with Docusaurus.`,
     },
     prism: {
       theme: prismThemes.github,

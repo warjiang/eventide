@@ -2,46 +2,54 @@
 sidebar_position: 1
 ---
 
-# Tutorial Intro
+# 什么是 Eventide
 
-Let's discover **Docusaurus in less than 5 minutes**.
+Eventide 通过 Event 解耦 Agent 运行时和消费端， 支持多语言、异构 Agent 框架将 Agent 运行时的事件暴露出来，供终端（比如 Web 前端、IM 端）消费。
 
-## Getting Started
+## 核心特性
 
-Get started by **creating a new site**.
+- **支持海量事件**：提供热（redis-stream）、温（postgresql）、冷（s3兼容存储）事件存储，支持海量事件的实时处理和查询
+- **多语言支持**：支持Python、GO、JavaScript(开发中) 等多语言的SDK接入
+- **异构 Agent 框架支持**：支持多种 Agent 框架，如 LangGraph、CrewAI 等主流 Agent 框架
 
-Or **try Docusaurus immediately** with **[docusaurus.new](https://docusaurus.new)**.
+## 架构概览
 
-### What you'll need
+> eventide主要解决了两个问题：
+> 1. 如何运行的agent把执行过程暴露出来
+> 2. 如何解决大量event消费、持久化问题
 
-- [Node.js](https://nodejs.org/en/download/) version 20.0 or above:
-  - When installing Node.js, you are recommended to check all checkboxes related to dependencies.
+event 天然是解耦复杂的一种形式，通过event的方式，可以解耦执行和消费的过程，结合我们的场景，其实就是前端和后端无需关注彼此，只需要为事件负责即可，Agent研发任务负责按照spec生产event，前端负责根据对应的event生成对应的可交互UI即可。开发Agent的过程中可能会有不同的编程语言、不同的framework，我们希望设计一套可复用的event spec,支持现有和未来可能产生的新需求。agent在执行过程中会生成大量的event，为了解决兼顾event的实时消费和冷备的需求，增加了 hot/warm/cold 三层存储，应对未来可能存在的event膨胀的问题。整体eventide结构：
 
-## Generate a new site
+![Eventide 架构](./img/eventide-architecture.png)
 
-Generate a new Docusaurus site using the **classic template**.
 
-The classic template will automatically be added to your project after you run the command:
+## 用法概览
 
-```bash
-npm init docusaurus@latest my-website classic
+### 安装依赖
+```
+pip install eventide-sdk
 ```
 
-You can type this command into Command Prompt, Powershell, Terminal, or any other integrated terminal of your code editor.
+### 运行 Agent & 写入事件
 
-The command also installs all necessary dependencies you need to run Docusaurus.
+```python
+from eventide import GatewayClient, Event, EventType, Level
 
-## Start your site
+GATEWAY_URL = os.getenv("EVENT_GATEWAY_URL", "http://127.0.0.1:18081")
+client = GatewayClient(GATEWAY_URL)
 
-Run the development server:
-
-```bash
-cd my-website
-npm run start
+async for chunk in agent.astream({
+    "messages": [HumanMessage(content=prompt)],
+    "llm_calls": 0,
+}):
+    for node_name, node_output in chunk.items():
+        messages = node_output.get("messages", [])
+        for last_message in messages:
+            # 处理消息
+            pass
 ```
 
-The `cd` command changes the directory you're working with. In order to work with your newly created Docusaurus site, you'll need to navigate the terminal there.
+## 下一步
 
-The `npm run start` command builds your website locally and serves it through a development server, ready for you to view at http://localhost:3000/.
-
-Open `docs/intro.md` (this page) and edit some lines: the site **reloads automatically** and displays your changes.
+- 查看 [Getting Started](./getting-started) 安装指南
+<!-- - 了解 [Agent 配置](./agent-config) -->
