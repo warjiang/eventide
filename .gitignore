@@ -19,6 +19,7 @@ charts/install.yaml
 node_modules
 .trae
 .agent
+.agents
 
 # MkDocs build output
 site/
