@@ -15,6 +15,16 @@ const sidebars: SidebarsConfig = {
         'sdk/node-sdk',
       ],
     },
+    {
+      type: 'category',
+      label: '案例',
+      items: [
+        'examples/lumina',
+        'examples/simple-agent',
+        'examples/open-perplexity-agent',
+        'examples/open-deep-perplexity-agent',
+      ],
+    },
     // {
     //   type: 'category',
     //   label: '教程',
