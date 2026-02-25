@@ -6,7 +6,7 @@
     <generator>https://github.com/jpmonette/feed</generator>
     <link rel="alternate" href="https://warjiang.github.io/eventide/blog"/>
     <subtitle>Eventide Blog</subtitle>
-    <icon>https://warjiang.github.io/eventide/img/logo-v2.jpg</icon>
+    <icon>https://warjiang.github.io/eventide/img/logo-v2.png</icon>
     <entry>
         <title type="html"><![CDATA[Welcome]]></title>
         <id>https://warjiang.github.io/eventide/blog/welcome</id>
