@@ -5,7 +5,7 @@ import type * as Preset from '@docusaurus/preset-classic';
 const config: Config = {
   title: 'Eventide',
   tagline: 'Event-driven Agent Task Scheduling System',
-  favicon: 'img/logo-v2.jpg',
+  favicon: 'img/logo-v2.png',
 
   future: {
     v4: true,
@@ -61,7 +61,7 @@ const config: Config = {
       title: 'Eventide ',
       logo: {
         alt: 'Eventide Logo',
-        src: 'img/logo-v2.jpg',
+        src: 'img/logo-v2.png',
       },
       items: [
         {
