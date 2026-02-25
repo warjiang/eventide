@@ -13,30 +13,31 @@ export const SPEC_VERSION = "agent-events/1.0";
  */
 export const EventType = Object.freeze({
   // Lifecycle
-  TurnStarted:        "turn.started",
-  TurnCompleted:      "turn.completed",
-  TurnFailed:         "turn.failed",
-  TurnCancelled:      "turn.cancelled",
+  TurnStarted: "turn.started",
+  TurnCompleted: "turn.completed",
+  TurnFailed: "turn.failed",
+  TurnCancelled: "turn.cancelled",
 
   // Message
-  MessageDelta:       "message.delta",
-  MessageCompleted:   "message.completed",
+  MessageDelta: "message.delta",
+  MessageCompleted: "message.completed",
 
   // Tool
-  ToolCallStarted:    "tool.call.started",
-  ToolCallArgsDelta:  "tool.call.args.delta",
-  ToolCallCompleted:  "tool.call.completed",
-  ToolCallError:      "tool.call.error",
+  ToolCallStarted: "tool.call.started",
+  ToolCallArgsDelta: "tool.call.args.delta",
+  ToolCallCompleted: "tool.call.completed",
+  ToolCallError: "tool.call.error",
 
   // State
-  StateSnapshot:      "state.snapshot",
-  StateDelta:         "state.delta",
+  StateSnapshot: "state.snapshot",
+  StateDelta: "state.delta",
 
   // Custom
-  Custom:             "custom",
+  Custom: "custom",
+  CustomComponent: "custom.component",
 
   // Thread
-  ThreadReady:        "thread.ready",
+  ThreadReady: "thread.ready",
 });
 
 /**
@@ -46,8 +47,8 @@ export const EventType = Object.freeze({
  */
 export const Level = Object.freeze({
   Debug: "debug",
-  Info:  "info",
-  Warn:  "warn",
+  Info: "info",
+  Warn: "warn",
   Error: "error",
 });
 
@@ -125,19 +126,19 @@ export class GatewayClient {
   async append(event) {
     const body = JSON.stringify({
       event: {
-        spec_version:  event.specVersion ?? SPEC_VERSION,
-        event_id:      event.eventId ?? "",
-        thread_id:     event.threadId,
-        turn_id:       event.turnId,
-        seq:           event.seq ?? 0,
-        ts:            event.ts ?? "",
-        type:          event.type,
-        level:         event.level ?? Level.Info,
-        payload:       event.payload ?? {},
-        content_type:  event.contentType,
-        source:        event.source,
-        trace:         event.trace,
-        tags:          event.tags,
+        spec_version: event.specVersion ?? SPEC_VERSION,
+        event_id: event.eventId ?? "",
+        thread_id: event.threadId,
+        turn_id: event.turnId,
+        seq: event.seq ?? 0,
+        ts: event.ts ?? "",
+        type: event.type,
+        level: event.level ?? Level.Info,
+        payload: event.payload ?? {},
+        content_type: event.contentType,
+        source: event.source,
+        trace: event.trace,
+        tags: event.tags,
       },
     });
 
@@ -159,9 +160,9 @@ export class GatewayClient {
 
       const result = await resp.json();
       return {
-        eventId:    result.event_id,
-        seq:        result.seq,
-        streamId:   result.stream_id,
+        eventId: result.event_id,
+        seq: result.seq,
+        streamId: result.stream_id,
         duplicated: result.duplicated,
       };
     } finally {
@@ -182,4 +183,19 @@ export class GatewayClient {
     }
     return results;
   }
+}
+
+/**
+ * Convenience helper to wrap component props in the format expected by json-render
+ * 
+ * @param {string} component - Name of the registered component (e.g. 'DataTable')
+ * @param {object} props - Properties to pass to the component
+ * @returns {object} JSON payload with __jr__ marker
+ */
+export function componentPayload(component, props = {}) {
+  return {
+    "__jr__": true,
+    component,
+    props
+  };
 }

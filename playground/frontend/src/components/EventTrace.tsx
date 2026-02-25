@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Badge } from "@/components/ui/badge"
 import { Wrench, CheckCircle2, Clock, ChevronDown, ChevronRight } from 'lucide-react'
 import MarkdownRenderer from './MarkdownRenderer'
+import { GenerativeComponent } from './GenerativeComponent'
 
 interface EventTraceProps {
     events: any[];
@@ -157,6 +158,35 @@ function EventItem({ evt }: { evt: any }) {
                     <div>
                         <Badge variant="outline" className="text-[9px] font-mono bg-blue-500/10 text-blue-500 hover:bg-blue-500/20 mb-0.5 py-0 h-4">
                             STATE DELTA
+                        </Badge>
+                        <div className="text-[10px] text-muted-foreground break-all">{JSON.stringify(evt.payload)}</div>
+                    </div>
+                </div>
+            )
+
+        case 'custom':
+            if (evt.payload?.__jr__) {
+                return (
+                    <div className="relative flex items-start gap-2 py-0.5 animate-in fade-in duration-300">
+                        <div className="relative z-10 mt-1 w-2.5 h-2.5 rounded-full border-2 border-background bg-violet-500 ring-2 ring-violet-500/20 shrink-0" />
+                        <div className="flex-1 min-w-0">
+                            <Badge variant="outline" className="text-[9px] font-mono bg-violet-500/10 text-violet-500 hover:bg-violet-500/20 mb-1 py-0 h-4 shadow-[0_0_6px_rgba(139,92,246,0.2)]">
+                                UI COMPONENT
+                            </Badge>
+                            <div className="mt-1 w-full max-w-full">
+                                <GenerativeComponent payload={evt.payload} />
+                            </div>
+                        </div>
+                    </div>
+                )
+            }
+            // fallthrough to default if it's a normal custom event
+            return (
+                <div className="relative flex items-start gap-2 py-0.5">
+                    <div className="relative z-10 mt-1 w-2.5 h-2.5 rounded-full border-2 border-background bg-cyan-500 shrink-0" />
+                    <div>
+                        <Badge variant="outline" className="text-[9px] font-mono bg-cyan-500/10 text-cyan-500 hover:bg-cyan-500/20 mb-0.5 py-0 h-4">
+                            {type.toUpperCase()}
                         </Badge>
                         <div className="text-[10px] text-muted-foreground break-all">{JSON.stringify(evt.payload)}</div>
                     </div>

@@ -16,7 +16,7 @@ import {
     deleteSession,
 } from './api'
 
-import { Agent, SessionData } from './api'
+import { Agent, SessionData, FileUploadResult } from './api'
 
 export default function App() {
     const { theme, setTheme, isDark } = useTheme()
@@ -146,7 +146,7 @@ export default function App() {
     // ── Send message ────────────────────────────────────────────────────
 
     const handleSend = useCallback(
-        async (prompt: string) => {
+        async (prompt: string, files?: FileUploadResult[]) => {
             if (!selectedAgent || isStreaming) return
 
             setError(null)
@@ -177,7 +177,7 @@ export default function App() {
             }
 
             // Add user message
-            const userMsg = { role: 'user', content: prompt, timestamp: Date.now() / 1000 }
+            const userMsg = { role: 'user', content: prompt, files, timestamp: Date.now() / 1000 }
             setMessages((prev) => [...prev, userMsg])
 
             // Save user message to backend
@@ -198,6 +198,7 @@ export default function App() {
                     selectedAgent.name,
                     selectedAgent.namespace,
                     prompt,
+                    files,
                     sessionId || undefined,   // playground session_id
                     threadId                  // reuse thread_id for multi-turn
                 )

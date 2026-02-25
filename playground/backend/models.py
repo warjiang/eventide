@@ -24,10 +24,18 @@ class AgentListResponse(BaseModel):
 
 # ── Invoke Models ────────────────────────────────────────────────────────
 
+class FileItem(BaseModel):
+    name: str
+    url: str
+    mime_type: str | None = None
+    size: int | None = None
+
+
 class InvokeRequest(BaseModel):
     agent_name: str
     namespace: str = "default"
     prompt: str
+    files: list[FileItem] | None = None
     session_id: str | None = None     # playground session_id, used to look up agentcube_session_id
     thread_id: str | None = None      # reuse existing thread_id for multi-turn conversations
     turn_id: str | None = None        # use existing turn_id if provided
@@ -64,6 +72,7 @@ class AgentEvent(BaseModel):
 class Message(BaseModel):
     role: MessageRole
     content: str
+    files: list[FileItem] | None = None
     thread_id: str | None = None
     events: list[AgentEvent] = Field(default_factory=list)
     timestamp: float = Field(default_factory=time.time)

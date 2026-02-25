@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react'
 import EventTrace from './EventTrace'
-import { MessageSquare, User, Bot } from 'lucide-react'
+import { MessageSquare, User, Bot, Paperclip } from 'lucide-react'
 
 interface ChatViewProps {
     messages: any[];
@@ -56,10 +56,28 @@ export default function ChatView({ messages, streamingEvents, isStreaming }: Cha
                         </div>
 
                         {msg.role === 'user' && (
-                            <div className="rounded-lg p-3 border bg-primary/5 border-primary/20">
+                            <div className="rounded-lg p-3 border bg-primary/5 border-primary/20 space-y-2">
                                 <div className="text-sm leading-relaxed text-foreground whitespace-pre-wrap">
                                     {msg.content}
                                 </div>
+                                {msg.files && msg.files.length > 0 && (
+                                    <div className="flex flex-wrap gap-2 pt-2 border-t border-primary/10">
+                                        {msg.files.map((file: any, idx: number) => (
+                                            <a
+                                                key={idx}
+                                                href={file.url}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                className="flex items-center gap-1.5 bg-surface/50 border border-border text-xs rounded-md px-2 py-1.5 hover:bg-surface/80 transition-colors"
+                                            >
+                                                <Paperclip className="w-3 h-3 text-muted-foreground" />
+                                                <span className="truncate max-w-[200px] text-muted-foreground hover:text-foreground">
+                                                    {file.name}
+                                                </span>
+                                            </a>
+                                        ))}
+                                    </div>
+                                )}
                             </div>
                         )}
 
