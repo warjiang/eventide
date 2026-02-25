@@ -34,6 +34,7 @@ class EventType(str, Enum):
 
     # Custom
     CUSTOM = "custom"
+    CUSTOM_COMPONENT = "custom.component"
 
     # Thread
     THREAD_READY = "thread.ready"

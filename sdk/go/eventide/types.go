@@ -22,8 +22,21 @@ const (
 	TypeStateDelta    = "state.delta"
 
 	// Custom
-	TypeCustom = "custom"
+	TypeCustom          = "custom"
+	TypeCustomComponent = "custom.component"
 
 	// Thread
 	TypeThreadReady = "thread.ready"
 )
+
+// ComponentPayload helper to create a payload for json-render
+func ComponentPayload(component string, props map[string]any) map[string]any {
+	if props == nil {
+		props = make(map[string]any)
+	}
+	return map[string]any{
+		"__jr__":    true,
+		"component": component,
+		"props":     props,
+	}
+}
