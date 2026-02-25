@@ -27,3 +27,6 @@ site/
 # Python virtualenvs
 .venv/
 venv/
+
+*storybook.log
+storybook-static
