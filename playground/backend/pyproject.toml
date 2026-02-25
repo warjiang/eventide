@@ -5,12 +5,14 @@ description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [
+    "aiofiles>=25.1.0",
     "fastapi>=0.129.1",
     "httpx>=0.28.1",
     "kubernetes>=35.0.0",
     "psycopg2-binary>=2.9.11",
     "pydantic>=2.12.5",
     "python-dotenv>=1.2.1",
+    "python-multipart>=0.0.22",
     "sse-starlette>=3.2.0",
     "uvicorn>=0.41.0",
 ]

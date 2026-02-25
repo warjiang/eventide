@@ -21,9 +21,9 @@ from contextlib import asynccontextmanager
 from typing import AsyncGenerator, Optional
 
 import httpx
-from fastapi import FastAPI, HTTPException, Request
+from fastapi import FastAPI, HTTPException, Request, UploadFile, File
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 from kubernetes import client, config
 from sse_starlette.sse import EventSourceResponse
@@ -41,6 +41,9 @@ from models import (
     SessionListResponse,
     SessionSummary,
 )
+from dotenv import load_dotenv
+
+load_dotenv()
 
 # ── Config ───────────────────────────────────────────────────────────────
 
@@ -54,6 +57,10 @@ logger = logging.getLogger("playground")
 from store import SessionStore
 
 sessions_store = SessionStore()
+
+
+# ── SeaweedFS Config ───────────────────────────────────────────────────────
+SEAWEEDFS_MASTER_URL = os.getenv("SEAWEEDFS_MASTER_URL", "http://127.0.0.1:29333")
 
 
 # ── Lifespan ─────────────────────────────────────────────────────────────
@@ -215,6 +222,49 @@ async def list_agents():
         raise HTTPException(status_code=500, detail=str(e))
 
 
+# ── Uploads ──────────────────────────────────────────────────────────────
+
+@app.post("/api/upload")
+async def upload_file(file: UploadFile = File(...), request: Request = None):
+    """Upload a file to SeaweedFS using the master /submit endpoint."""
+    try:
+        async with httpx.AsyncClient(timeout=30.0) as client:
+            content = await file.read()
+            files = {"file": (file.filename, content, file.content_type)}
+            
+            submit_url = f"{SEAWEEDFS_MASTER_URL}/submit"
+            logger.info("Submitting file %s to SeaweedFS master at %s", file.filename, submit_url)
+            
+            submit_resp = await client.post(submit_url, files=files)
+            submit_resp.raise_for_status()
+            submit_data = submit_resp.json()
+            
+            fid = submit_data.get("fid")
+            if not fid:
+                raise ValueError("SeaweedFS did not return an fid after submit")
+                
+            # The URL will be returned for frontend and agent to use
+            if os.getenv("SEAWEEDFS_OVERRIDE_PUBLIC_URL"):
+                # Usually formatted as http://10.37.91.104:28080
+                volume_base = os.getenv("SEAWEEDFS_OVERRIDE_PUBLIC_URL").rstrip('/')
+                file_url = f"{volume_base}/{fid}"
+            else:
+                file_url = f"http://{submit_data.get('fileUrl')}"
+            
+            return JSONResponse(content={
+                "name": file.filename,
+                "url": file_url,
+                "mime_type": file.content_type,
+                "size": submit_data.get("size", len(content))
+            })
+    except httpx.HTTPStatusError as e:
+        logger.error(f"SeaweedFS HTTP error: {e.response.status_code} - {e.response.text}")
+        raise HTTPException(status_code=500, detail=f"Failed to upload to SeaweedFS: {str(e)}")
+    except Exception as e:
+        logger.exception(f"Failed to upload file {file.filename}")
+        raise HTTPException(status_code=500, detail=f"Failed to upload: {str(e)}")
+
+
 # ── Invoke ───────────────────────────────────────────────────────────────
 
 @app.post("/api/invoke", response_model=InvokeResponse)
@@ -255,6 +305,10 @@ async def invoke_agent(req: InvokeRequest):
         turn_id = req.turn_id or f"turn_{uuid.uuid4().hex[:8]}"
         payload_data["thread_id"] = thread_id
         payload_data["turn_id"] = turn_id
+        
+        logger.info(f'files', req.files)
+        if req.files:
+            payload_data["files"] = [file.model_dump() for file in req.files]
         
         body: dict = {"payload": payload_data}
 
@@ -440,7 +494,6 @@ if os.path.isdir(static_dir):
             if os.path.isfile(index_file):
                 return FileResponse(index_file)
         # Otherwise, return the normal 404
-        from fastapi.responses import JSONResponse
         return JSONResponse({"detail": "Not Found"}, status_code=404)
 
     app.mount("/", StaticFiles(directory=static_dir, html=True), name="static")

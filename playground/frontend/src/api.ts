@@ -9,6 +9,13 @@ export interface Agent {
     namespace: string;
 }
 
+export interface FileUploadResult {
+    name: string;
+    url: string;
+    mime_type: string;
+    size: number;
+}
+
 export interface SessionData {
     session_id: string;
     thread_id: string | null;
@@ -38,23 +45,45 @@ export async function fetchAgents() {
     return resp.json();
 }
 
+export async function uploadFile(file: File): Promise<FileUploadResult> {
+    const formData = new FormData();
+    formData.append('file', file);
+
+    const resp = await fetch(`${BASE}/api/upload`, {
+        method: 'POST',
+        body: formData,
+    });
+
+    if (!resp.ok) {
+        const text = await resp.text();
+        throw new Error(`Upload failed (${resp.status}): ${text}`);
+    }
+    return resp.json();
+}
+
 export async function invokeAgent(
     agentName: string,
     namespace: string,
     prompt: string,
+    files?: FileUploadResult[],
     sessionId?: string,      // playground session_id — backend uses it to look up agentcube session
     threadId?: string | null  // reuse thread_id for multi-turn conversations
 ): Promise<InvokeResult> {
+    const body: any = {
+        agent_name: agentName,
+        namespace,
+        prompt,
+        session_id: sessionId || null,
+        thread_id: threadId || null,
+    };
+    if (files && files.length > 0) {
+        body.files = files;
+    }
+
     const resp = await fetch(`${BASE}/api/invoke`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-            agent_name: agentName,
-            namespace,
-            prompt,
-            session_id: sessionId || null,
-            thread_id: threadId || null,
-        }),
+        body: JSON.stringify(body),
     });
     if (!resp.ok) {
         const text = await resp.text();
