@@ -1,7 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Badge } from "@/components/ui/badge"
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar } from 'recharts'
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, PieChart, Pie, Cell, Legend } from 'recharts'
 import MarkdownRenderer from './MarkdownRenderer'
 import { Info, AlertTriangle, XCircle, CheckCircle2 } from 'lucide-react'
 
@@ -68,35 +68,68 @@ function MetricCard({ props }: { props: { title: string, value: string | number,
 }
 
 // Chart component using recharts
-function Chart({ props }: { props: { type?: 'line' | 'bar', data: any[], xKey: string, yKey: string, height?: number } }) {
-    const { type = 'line', data, xKey, yKey, height = 200 } = props;
+function Chart({ props }: { props: { type?: 'line' | 'bar' | 'pie', data: any[], xKey?: string, yKey?: string, height?: number, title?: string, colors?: string[], showLegend?: boolean, innerRadius?: number } }) {
+    const { type = 'line', data, xKey, yKey, height = 200, title, colors, showLegend, innerRadius } = props;
     if (!data || data.length === 0) return null;
+
+    const DEFAULT_COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8', '#8dd1e1'];
+    const pieColors = colors || DEFAULT_COLORS;
 
     return (
         <Card className="my-2 bg-card overflow-hidden">
+            {title && (
+                <CardHeader className="pb-0 pt-4 px-4">
+                    <CardTitle className="text-sm font-medium text-muted-foreground">{title}</CardTitle>
+                </CardHeader>
+            )}
             <div className="p-4" style={{ height }}>
                 <ResponsiveContainer width="100%" height="100%">
-                    {type === 'bar' ? (
-                        <BarChart data={data} margin={{ top: 5, right: 10, left: 0, bottom: 5 }}>
-                            <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" vertical={false} />
-                            <XAxis dataKey={xKey} stroke="hsl(var(--muted-foreground))" fontSize={12} tickLine={false} axisLine={false} />
-                            <YAxis stroke="hsl(var(--muted-foreground))" fontSize={12} tickLine={false} axisLine={false} />
+                    {type === 'pie' ? (
+                        <PieChart margin={{ top: 0, right: 0, left: 0, bottom: 0 }}>
                             <Tooltip
                                 contentStyle={{ backgroundColor: 'hsl(var(--popover))', borderColor: 'hsl(var(--border))', borderRadius: '8px' }}
                                 itemStyle={{ color: 'hsl(var(--popover-foreground))' }}
                             />
-                            <Bar dataKey={yKey} fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
+                            {showLegend && <Legend verticalAlign="bottom" height={36} />}
+                            <Pie
+                                data={data}
+                                cx="50%"
+                                cy="50%"
+                                innerRadius={innerRadius || 0}
+                                outerRadius="80%"
+                                fill="hsl(var(--primary))"
+                                paddingAngle={2}
+                                dataKey={yKey || "value"}
+                                nameKey={xKey || "name"}
+                            >
+                                {data.map((entry, index) => (
+                                    <Cell key={`cell-${index}`} fill={pieColors[index % pieColors.length]} />
+                                ))}
+                            </Pie>
+                        </PieChart>
+                    ) : type === 'bar' ? (
+                        <BarChart data={data} margin={{ top: 5, right: 10, left: 0, bottom: 5 }}>
+                            <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" vertical={false} />
+                            <XAxis dataKey={xKey} stroke="hsl(var(--muted-foreground))" fontSize={12} tickLine={false} axisLine={false} />
+                            {yKey && <YAxis stroke="hsl(var(--muted-foreground))" fontSize={12} tickLine={false} axisLine={false} />}
+                            <Tooltip
+                                contentStyle={{ backgroundColor: 'hsl(var(--popover))', borderColor: 'hsl(var(--border))', borderRadius: '8px' }}
+                                itemStyle={{ color: 'hsl(var(--popover-foreground))' }}
+                            />
+                            {showLegend && <Legend verticalAlign="bottom" height={36} />}
+                            <Bar dataKey={yKey!} fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
                         </BarChart>
                     ) : (
                         <LineChart data={data} margin={{ top: 5, right: 10, left: 0, bottom: 5 }}>
                             <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" vertical={false} />
                             <XAxis dataKey={xKey} stroke="hsl(var(--muted-foreground))" fontSize={12} tickLine={false} axisLine={false} />
-                            <YAxis stroke="hsl(var(--muted-foreground))" fontSize={12} tickLine={false} axisLine={false} />
+                            {yKey && <YAxis stroke="hsl(var(--muted-foreground))" fontSize={12} tickLine={false} axisLine={false} />}
                             <Tooltip
                                 contentStyle={{ backgroundColor: 'hsl(var(--popover))', borderColor: 'hsl(var(--border))', borderRadius: '8px' }}
                                 itemStyle={{ color: 'hsl(var(--popover-foreground))' }}
                             />
-                            <Line type="monotone" dataKey={yKey} stroke="hsl(var(--primary))" strokeWidth={2} dot={{ fill: 'hsl(var(--primary))', strokeWidth: 2, r: 4 }} activeDot={{ r: 6 }} />
+                            {showLegend && <Legend verticalAlign="bottom" height={36} />}
+                            <Line type="monotone" dataKey={yKey!} stroke="hsl(var(--primary))" strokeWidth={2} dot={{ fill: 'hsl(var(--primary))', strokeWidth: 2, r: 4 }} activeDot={{ r: 6 }} />
                         </LineChart>
                     )}
                 </ResponsiveContainer>
