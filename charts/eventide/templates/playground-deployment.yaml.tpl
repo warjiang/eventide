@@ -51,6 +51,8 @@ spec:
               value: {{ printf "http://%s-seaweedfs.%s.svc.cluster.local:%d" .Release.Name .Release.Namespace (int .Values.seaweedfs.service.ports.volume) | quote }}
             - name: SEAWEEDFS_PUBLIC_URL
               value: {{ printf "http://%s-seaweedfs.%s.svc.cluster.local:%d" .Release.Name .Release.Namespace (int .Values.seaweedfs.service.ports.public) | quote }}
+            - name: SEAWEEDFS_OVERRIDE_PUBLIC_URL
+              value: {{ printf "http://%s-seaweedfs.%s.svc.cluster.local:%d" .Release.Name .Release.Namespace (int .Values.seaweedfs.service.ports.volume) | quote }}
             - name: SEAWEEDFS_BUCKET
               value: "uploads"
           livenessProbe:
