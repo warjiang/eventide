@@ -120,7 +120,7 @@ def get_agent_runtime_gvr():
         logger.warning("Failed to look up AgentRuntime CRD dynamically: %s", e)
     
     # Fallback to defaults
-    _gvr_cache = ("agentcube.io", "v1alpha1", "agentruntimes")
+    _gvr_cache = ("runtime.agentcube.volcano.sh", "v1alpha1", "agentruntimes")
     return _gvr_cache
 
 

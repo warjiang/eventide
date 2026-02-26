@@ -18,6 +18,7 @@ spec:
         {{- include "eventide.selectorLabels" . | nindent 8 }}
         app.kubernetes.io/component: playground
     spec:
+      serviceAccountName: {{ include "eventide.fullname" . }}-playground
       {{- with .Values.imagePullSecrets }}
       imagePullSecrets:
         {{- toYaml . | nindent 8 }}
