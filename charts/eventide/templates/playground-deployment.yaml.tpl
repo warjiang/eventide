@@ -45,6 +45,14 @@ spec:
                 secretKeyRef:
                   name: {{ include "eventide.secretsName" . }}
                   key: PG_CONN
+            - name: SEAWEEDFS_MASTER_URL
+              value: {{ printf "http://%s-seaweedfs.%s.svc.cluster.local:%d" .Release.Name .Release.Namespace (int .Values.seaweedfs.service.ports.master) | quote }}
+            - name: SEAWEEDFS_VOLUME_URL
+              value: {{ printf "http://%s-seaweedfs.%s.svc.cluster.local:%d" .Release.Name .Release.Namespace (int .Values.seaweedfs.service.ports.volume) | quote }}
+            - name: SEAWEEDFS_PUBLIC_URL
+              value: {{ printf "http://%s-seaweedfs.%s.svc.cluster.local:%d" .Release.Name .Release.Namespace (int .Values.seaweedfs.service.ports.public) | quote }}
+            - name: SEAWEEDFS_BUCKET
+              value: "uploads"
           livenessProbe:
             httpGet:
               path: /healthz
