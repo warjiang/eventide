@@ -70,14 +70,17 @@ export const ChartBarExample: Story = {
         name: 'Chart',
         props: {
             type: 'bar',
+            title: 'Monthly Sales Performance',
             xKey: 'name',
             yKey: 'sales',
-            height: 250,
+            height: 300,
             data: [
-                { name: 'Jan', sales: 400 },
-                { name: 'Feb', sales: 300 },
-                { name: 'Mar', sales: 550 },
-                { name: 'Apr', sales: 450 }
+                { name: 'Jan', sales: 4200 },
+                { name: 'Feb', sales: 3800 },
+                { name: 'Mar', sales: 5500 },
+                { name: 'Apr', sales: 4900 },
+                { name: 'May', sales: 6200 },
+                { name: 'Jun', sales: 5800 }
             ]
         }
     }
@@ -89,14 +92,19 @@ export const ChartLineExample: Story = {
         name: 'Chart',
         props: {
             type: 'line',
-            xKey: 'name',
-            yKey: 'sales',
-            height: 250,
+            title: 'User Growth Trend',
+            xKey: 'month',
+            yKey: 'users',
+            height: 300,
             data: [
-                { name: 'Jan', sales: 400 },
-                { name: 'Feb', sales: 300 },
-                { name: 'Mar', sales: 550 },
-                { name: 'Apr', sales: 450 }
+                { month: 'Jan', users: 1200 },
+                { month: 'Feb', users: 1900 },
+                { month: 'Mar', users: 2400 },
+                { month: 'Apr', users: 3100 },
+                { month: 'May', users: 4200 },
+                { month: 'Jun', users: 5800 },
+                { month: 'Jul', users: 6500 },
+                { month: 'Aug', users: 7200 }
             ]
         }
     }
@@ -109,13 +117,37 @@ export const ChartPieExample: Story = {
         props: {
             type: 'pie',
             title: '会员订阅状态',
-            height: 300,
+            height: 340,
             showLegend: true,
             innerRadius: 40,
-            colors: ['#1abc9c', '#95a5a6'],
+            colors: ['#667eea', '#f5576c', '#4facfe', '#43e97b'],
             data: [
-                { name: '会员', value: 2730 },
-                { name: '非会员', value: 1170 }
+                { name: '年度会员', value: 2730 },
+                { name: '月度会员', value: 1170 },
+                { name: '试用用户', value: 850 },
+                { name: '免费用户', value: 420 }
+            ]
+        }
+    }
+};
+
+export const ChartDonutExample: Story = {
+    name: 'Chart (Donut)',
+    args: {
+        name: 'Chart',
+        props: {
+            type: 'pie',
+            title: 'Traffic Sources',
+            height: 320,
+            showLegend: true,
+            innerRadius: 55,
+            colors: ['#667eea', '#f5576c', '#4facfe', '#43e97b', '#fa709a'],
+            data: [
+                { name: 'Organic Search', value: 42 },
+                { name: 'Direct', value: 28 },
+                { name: 'Social Media', value: 18 },
+                { name: 'Referral', value: 8 },
+                { name: 'Other', value: 4 }
             ]
         }
     }
