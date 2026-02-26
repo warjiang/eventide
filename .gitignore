@@ -30,3 +30,5 @@ venv/
 
 *storybook.log
 storybook-static
+charts/eventide/values-saas.yaml
+charts/litellm/values-saas.yaml
