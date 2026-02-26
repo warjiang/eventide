@@ -1,0 +1,19 @@
+[project]
+name = "simple-agent-with-file"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "agentcube-cli>=0.1.1",
+    "dotenv>=0.9.9",
+    "eventide-sdk>=0.1.4",
+    "kubernetes>=35.0.0",
+    "langchain>=1.2.10",
+    "langchain-openai>=1.1.9",
+    "langgraph>=1.0.8",
+    "openai>=2.21.0",
+    "openpyxl>=3.1.5",
+    "pandas>=3.0.1",
+    "requests>=2.32.5",
+]
