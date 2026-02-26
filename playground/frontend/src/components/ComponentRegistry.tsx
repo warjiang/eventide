@@ -1,11 +1,42 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Badge } from "@/components/ui/badge"
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, PieChart, Pie, Cell, Legend } from 'recharts'
+import ReactEChartsCore from 'echarts-for-react/lib/core'
+import * as echarts from 'echarts/core'
+import { LineChart as ELineChart, BarChart as EBarChart, PieChart as EPieChart } from 'echarts/charts'
+import {
+    GridComponent,
+    TooltipComponent,
+    LegendComponent,
+    TitleComponent,
+} from 'echarts/components'
+import { CanvasRenderer } from 'echarts/renderers'
 import MarkdownRenderer from './MarkdownRenderer'
-import { Info, AlertTriangle, XCircle, CheckCircle2 } from 'lucide-react'
+import {
+    Info, AlertTriangle, XCircle, CheckCircle2,
+    BarChart3, Table, TrendingUp, Bell, FileJson, FileText, Component,
+} from 'lucide-react'
+import type { LucideIcon } from 'lucide-react'
 
-// Basic DataTable component
+// Register ECharts components (tree-shakable)
+echarts.use([
+    ELineChart, EBarChart, EPieChart,
+    GridComponent, TooltipComponent, LegendComponent, TitleComponent,
+    CanvasRenderer,
+])
+
+// ── Icon mapping for each registered component ──────────────────────────
+export const componentIcons: Record<string, LucideIcon> = {
+    Chart: BarChart3,
+    DataTable: Table,
+    MetricCard: TrendingUp,
+    Alert: Bell,
+    JsonViewer: FileJson,
+    Markdown: FileText,
+    Badge: Component,
+}
+
+// ── Basic DataTable component ───────────────────────────────────────────
 function DataTable({ props }: { props: { columns: string[], rows: any[][] } }) {
     const { columns, rows } = props;
     if (!columns || !rows) return null;
@@ -39,7 +70,7 @@ function DataTable({ props }: { props: { columns: string[], rows: any[][] } }) {
     )
 }
 
-// MetricCard component
+// ── MetricCard component ────────────────────────────────────────────────
 function MetricCard({ props }: { props: { title: string, value: string | number, trend?: string, unit?: string } }) {
     const { title, value, trend, unit } = props;
     const isPositive = trend?.startsWith('+');
@@ -67,13 +98,177 @@ function MetricCard({ props }: { props: { title: string, value: string | number,
     )
 }
 
-// Chart component using recharts
+// ── Premium color palettes ──────────────────────────────────────────────
+const GRADIENT_COLORS = [
+    { start: '#667eea', end: '#764ba2' },
+    { start: '#f093fb', end: '#f5576c' },
+    { start: '#4facfe', end: '#00f2fe' },
+    { start: '#43e97b', end: '#38f9d7' },
+    { start: '#fa709a', end: '#fee140' },
+    { start: '#a18cd1', end: '#fbc2eb' },
+]
+
+const SOLID_COLORS = ['#667eea', '#f5576c', '#4facfe', '#43e97b', '#fa709a', '#a18cd1']
+
+// ── ECharts Chart component ─────────────────────────────────────────────
 function Chart({ props }: { props: { type?: 'line' | 'bar' | 'pie', data: any[], xKey?: string, yKey?: string, height?: number, title?: string, colors?: string[], showLegend?: boolean, innerRadius?: number } }) {
-    const { type = 'line', data, xKey, yKey, height = 200, title, colors, showLegend, innerRadius } = props;
+    const { type = 'line', data, xKey, yKey, height = 280, title, colors, showLegend, innerRadius } = props;
     if (!data || data.length === 0) return null;
 
-    const DEFAULT_COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8', '#8dd1e1'];
-    const pieColors = colors || DEFAULT_COLORS;
+    const chartColors = colors || SOLID_COLORS;
+
+    // CSS variable → computed color (for theming)
+    const getCssVar = (name: string) => {
+        if (typeof document === 'undefined') return '#888'
+        return getComputedStyle(document.documentElement).getPropertyValue(name).trim() || '#888'
+    }
+
+    const textColor = getCssVar('--muted-foreground') || '#94a3b8'
+    const borderColor = getCssVar('--border') || '#334155'
+
+    const buildOption = (): any => {
+        const baseTooltip = {
+            trigger: type === 'pie' ? 'item' : 'axis',
+            backgroundColor: 'rgba(15, 23, 42, 0.9)',
+            borderColor: 'rgba(148, 163, 184, 0.2)',
+            borderRadius: 12,
+            padding: [10, 14],
+            textStyle: {
+                color: '#e2e8f0',
+                fontSize: 12,
+            },
+            extraCssText: 'box-shadow: 0 8px 32px rgba(0,0,0,0.3); backdrop-filter: blur(10px);',
+        }
+
+        if (type === 'pie') {
+            return {
+                tooltip: baseTooltip,
+                legend: showLegend ? {
+                    bottom: 0,
+                    textStyle: { color: textColor, fontSize: 11 },
+                    itemWidth: 10, itemHeight: 10,
+                    itemGap: 16,
+                } : undefined,
+                animationDuration: 800,
+                animationEasing: 'cubicInOut',
+                series: [{
+                    type: 'pie',
+                    radius: [innerRadius ? `${innerRadius}%` : '0%', '75%'],
+                    center: ['50%', showLegend ? '45%' : '50%'],
+                    avoidLabelOverlap: true,
+                    padAngle: 2,
+                    itemStyle: {
+                        borderRadius: 6,
+                        borderColor: 'transparent',
+                        borderWidth: 2,
+                    },
+                    label: {
+                        show: true,
+                        formatter: '{b}: {d}%',
+                        color: textColor,
+                        fontSize: 11,
+                    },
+                    emphasis: {
+                        itemStyle: {
+                            shadowBlur: 20,
+                            shadowOffsetX: 0,
+                            shadowColor: 'rgba(0, 0, 0, 0.3)',
+                        },
+                        label: { fontSize: 13, fontWeight: 'bold' },
+                    },
+                    data: data.map((d, i) => ({
+                        value: d[yKey || 'value'],
+                        name: d[xKey || 'name'],
+                        itemStyle: { color: chartColors[i % chartColors.length] },
+                    })),
+                }],
+            }
+        }
+
+        // Line or Bar
+        const xData = data.map(d => d[xKey || 'name'])
+        const yData = data.map(d => d[yKey || 'value'])
+        const primaryColor = chartColors[0] || '#667eea'
+        const gradientPair = GRADIENT_COLORS[0]
+
+        const series: any = type === 'bar' ? {
+            type: 'bar',
+            data: yData,
+            barWidth: '50%',
+            barMaxWidth: 40,
+            itemStyle: {
+                borderRadius: [6, 6, 0, 0],
+                color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+                    { offset: 0, color: gradientPair.start },
+                    { offset: 1, color: gradientPair.end },
+                ]),
+            },
+            emphasis: {
+                itemStyle: {
+                    shadowBlur: 12,
+                    shadowColor: 'rgba(102, 126, 234, 0.4)',
+                },
+            },
+        } : {
+            type: 'line',
+            data: yData,
+            smooth: true,
+            symbol: 'circle',
+            symbolSize: 8,
+            lineStyle: {
+                width: 3,
+                color: new echarts.graphic.LinearGradient(0, 0, 1, 0, [
+                    { offset: 0, color: gradientPair.start },
+                    { offset: 1, color: gradientPair.end },
+                ]),
+                shadowColor: 'rgba(102, 126, 234, 0.3)',
+                shadowBlur: 10,
+                shadowOffsetY: 6,
+            },
+            itemStyle: { color: primaryColor, borderWidth: 2, borderColor: '#fff' },
+            areaStyle: {
+                color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+                    { offset: 0, color: `${primaryColor}40` },
+                    { offset: 0.7, color: `${primaryColor}08` },
+                    { offset: 1, color: 'transparent' },
+                ]),
+            },
+        }
+
+        return {
+            tooltip: baseTooltip,
+            legend: showLegend ? {
+                bottom: 0,
+                textStyle: { color: textColor, fontSize: 11 },
+                itemWidth: 10, itemHeight: 10,
+            } : undefined,
+            grid: {
+                left: 12, right: 16, top: 16,
+                bottom: showLegend ? 40 : 12,
+                containLabel: true,
+            },
+            xAxis: {
+                type: 'category',
+                data: xData,
+                axisLine: { show: false },
+                axisTick: { show: false },
+                axisLabel: { color: textColor, fontSize: 11 },
+                splitLine: { show: false },
+            },
+            yAxis: {
+                type: 'value',
+                axisLine: { show: false },
+                axisTick: { show: false },
+                axisLabel: { color: textColor, fontSize: 11 },
+                splitLine: {
+                    lineStyle: { color: borderColor, type: 'dashed', opacity: 0.3 },
+                },
+            },
+            animationDuration: 800,
+            animationEasing: 'cubicInOut',
+            series: [series],
+        }
+    }
 
     return (
         <Card className="my-2 bg-card overflow-hidden">
@@ -82,63 +277,21 @@ function Chart({ props }: { props: { type?: 'line' | 'bar' | 'pie', data: any[],
                     <CardTitle className="text-sm font-medium text-muted-foreground">{title}</CardTitle>
                 </CardHeader>
             )}
-            <div className="p-4" style={{ height }}>
-                <ResponsiveContainer width="100%" height="100%">
-                    {type === 'pie' ? (
-                        <PieChart margin={{ top: 0, right: 0, left: 0, bottom: 0 }}>
-                            <Tooltip
-                                contentStyle={{ backgroundColor: 'hsl(var(--popover))', borderColor: 'hsl(var(--border))', borderRadius: '8px' }}
-                                itemStyle={{ color: 'hsl(var(--popover-foreground))' }}
-                            />
-                            {showLegend && <Legend verticalAlign="bottom" height={36} />}
-                            <Pie
-                                data={data}
-                                cx="50%"
-                                cy="50%"
-                                innerRadius={innerRadius || 0}
-                                outerRadius="80%"
-                                fill="hsl(var(--primary))"
-                                paddingAngle={2}
-                                dataKey={yKey || "value"}
-                                nameKey={xKey || "name"}
-                            >
-                                {data.map((entry, index) => (
-                                    <Cell key={`cell-${index}`} fill={pieColors[index % pieColors.length]} />
-                                ))}
-                            </Pie>
-                        </PieChart>
-                    ) : type === 'bar' ? (
-                        <BarChart data={data} margin={{ top: 5, right: 10, left: 0, bottom: 5 }}>
-                            <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" vertical={false} />
-                            <XAxis dataKey={xKey} stroke="hsl(var(--muted-foreground))" fontSize={12} tickLine={false} axisLine={false} />
-                            {yKey && <YAxis stroke="hsl(var(--muted-foreground))" fontSize={12} tickLine={false} axisLine={false} />}
-                            <Tooltip
-                                contentStyle={{ backgroundColor: 'hsl(var(--popover))', borderColor: 'hsl(var(--border))', borderRadius: '8px' }}
-                                itemStyle={{ color: 'hsl(var(--popover-foreground))' }}
-                            />
-                            {showLegend && <Legend verticalAlign="bottom" height={36} />}
-                            <Bar dataKey={yKey!} fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
-                        </BarChart>
-                    ) : (
-                        <LineChart data={data} margin={{ top: 5, right: 10, left: 0, bottom: 5 }}>
-                            <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" vertical={false} />
-                            <XAxis dataKey={xKey} stroke="hsl(var(--muted-foreground))" fontSize={12} tickLine={false} axisLine={false} />
-                            {yKey && <YAxis stroke="hsl(var(--muted-foreground))" fontSize={12} tickLine={false} axisLine={false} />}
-                            <Tooltip
-                                contentStyle={{ backgroundColor: 'hsl(var(--popover))', borderColor: 'hsl(var(--border))', borderRadius: '8px' }}
-                                itemStyle={{ color: 'hsl(var(--popover-foreground))' }}
-                            />
-                            {showLegend && <Legend verticalAlign="bottom" height={36} />}
-                            <Line type="monotone" dataKey={yKey!} stroke="hsl(var(--primary))" strokeWidth={2} dot={{ fill: 'hsl(var(--primary))', strokeWidth: 2, r: 4 }} activeDot={{ r: 6 }} />
-                        </LineChart>
-                    )}
-                </ResponsiveContainer>
+            <div className="p-4">
+                <ReactEChartsCore
+                    echarts={echarts}
+                    option={buildOption()}
+                    style={{ height: height, width: '100%' }}
+                    opts={{ renderer: 'canvas' }}
+                    notMerge={true}
+                    lazyUpdate={true}
+                />
             </div>
         </Card>
     )
 }
 
-// Custom Alert Component
+// ── Custom Alert Component ──────────────────────────────────────────────
 function CustomAlert({ props }: { props: { variant?: 'info' | 'warn' | 'error' | 'success', message: string, title?: string } }) {
     const { variant = 'info', message, title } = props;
     let icon = <Info className="h-4 w-4" />
@@ -172,7 +325,7 @@ function CustomAlert({ props }: { props: { variant?: 'info' | 'warn' | 'error' |
     )
 }
 
-// JsonViewer Component (Simplified, just using a styled pre block for now)
+// ── JsonViewer Component ────────────────────────────────────────────────
 function JsonViewer({ props }: { props: { data: any } }) {
     return (
         <div className="font-mono text-xs text-muted-foreground bg-muted/50 p-3 rounded-md overflow-x-auto my-2 border border-border">
@@ -181,12 +334,12 @@ function JsonViewer({ props }: { props: { data: any } }) {
     )
 }
 
-// Wrapped Badge instance for json-render
+// ── Wrapped Badge  ──────────────────────────────────────────────────────
 function WrappedBadge({ props }: { props: any }) {
     return <Badge {...props} />;
 }
 
-// Register all components to be available for json-render
+// ── Component Registry ──────────────────────────────────────────────────
 export const ComponentRegistry: any = {
     DataTable,
     MetricCard,

@@ -1,8 +1,9 @@
 import { useState } from 'react'
 import { Badge } from "@/components/ui/badge"
-import { Wrench, CheckCircle2, Clock, ChevronDown, ChevronRight } from 'lucide-react'
+import { Wrench, CheckCircle2, Clock, ChevronDown, ChevronRight, Component as ComponentIcon } from 'lucide-react'
 import MarkdownRenderer from './MarkdownRenderer'
 import { GenerativeComponent } from './GenerativeComponent'
+import { componentIcons } from './ComponentRegistry'
 
 interface EventTraceProps {
     events: any[];
@@ -166,12 +167,17 @@ function EventItem({ evt }: { evt: any }) {
 
         case 'custom':
             if (evt.payload?.__jr__) {
+                const compName = evt.payload?.component || 'Unknown'
+                const IconComp = componentIcons[compName] || ComponentIcon
                 return (
                     <div className="relative flex items-start gap-2 py-0.5 animate-in fade-in duration-300">
-                        <div className="relative z-10 mt-1 w-2.5 h-2.5 rounded-full border-2 border-background bg-violet-500 ring-2 ring-violet-500/20 shrink-0" />
+                        <div className="relative z-10 mt-1 w-5 h-5 rounded-md bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center shadow-[0_0_8px_rgba(139,92,246,0.3)] shrink-0">
+                            <IconComp className="w-3 h-3 text-white" />
+                        </div>
                         <div className="flex-1 min-w-0">
-                            <Badge variant="outline" className="text-[9px] font-mono bg-violet-500/10 text-violet-500 hover:bg-violet-500/20 mb-1 py-0 h-4 shadow-[0_0_6px_rgba(139,92,246,0.2)]">
-                                UI COMPONENT
+                            <Badge variant="outline" className="text-[9px] font-mono bg-violet-500/10 text-violet-500 hover:bg-violet-500/20 mb-1 py-0 h-4 shadow-[0_0_6px_rgba(139,92,246,0.2)] gap-1">
+                                <IconComp className="w-2.5 h-2.5" />
+                                {compName}
                             </Badge>
                             <div className="mt-1 w-full max-w-full">
                                 <GenerativeComponent payload={evt.payload} />
