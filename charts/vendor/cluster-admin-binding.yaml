@@ -1,0 +1,13 @@
+# cluster-admin-binding.yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: workloadmanager-cluster-admin-binding
+subjects:
+- kind: ServiceAccount
+  name: workloadmanager
+  namespace: agentcube
+roleRef:
+  kind: ClusterRole
+  name: cluster-admin
+  apiGroup: rbac.authorization.k8s.io

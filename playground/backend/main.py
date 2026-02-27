@@ -296,7 +296,7 @@ async def invoke_agent(req: InvokeRequest):
         thread_id = req.thread_id or (session.thread_id if session else None)
         if not thread_id:
             from datetime import datetime
-            thread_id = f"thread_{datetime.now().strftime('%Y%m%d%H%M%S')}_{uuid.uuid4().hex[:8]}"
+            thread_id = f"thread-{datetime.now().strftime('%Y%m%d%H%M%S')}-{uuid.uuid4().hex[:8]}"
             logger.info(f"Generated new thread_id: {thread_id}")
         else:
             logger.info(f"Reusing thread_id: {thread_id}")
@@ -304,7 +304,7 @@ async def invoke_agent(req: InvokeRequest):
         headers["x-agentcube-biz-id"] = thread_id
 
         # Generate a turn_id for this invocation
-        turn_id = req.turn_id or f"turn_{uuid.uuid4().hex[:8]}"
+        turn_id = req.turn_id or f"turn-{uuid.uuid4().hex[:8]}"
         payload_data["thread_id"] = thread_id
         payload_data["turn_id"] = turn_id
         
