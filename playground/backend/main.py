@@ -301,10 +301,13 @@ async def invoke_agent(req: InvokeRequest):
         else:
             logger.info(f"Reusing thread_id: {thread_id}")
 
+        headers["x-agentcube-biz-id"] = thread_id
+
         # Generate a turn_id for this invocation
         turn_id = req.turn_id or f"turn_{uuid.uuid4().hex[:8]}"
         payload_data["thread_id"] = thread_id
         payload_data["turn_id"] = turn_id
+        
         
         logger.info(f'files', req.files)
         if req.files:
